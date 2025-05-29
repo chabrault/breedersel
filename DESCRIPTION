@@ -1,0 +1,50 @@
+Package: grapesel
+Title: Grapevine Selector
+Version: 0.0.0.9000
+Authors@R: 
+    person("Charlotte", "Brault", , "charlotte.brault@live.com", role = c("cre", "aut"))
+Author: Charlotte Brault [cre, aut]
+Maintainer: Charlotte Brault <charlotte.brault@live.com>
+Description: Provide guides to select new grapevine varieties based on a
+    multivariate selection index. Takes various tables as input with a
+    column 'genotype' and other variable columns.
+License: MIT + file LICENSE
+Imports: 
+    bs4Dash,
+    bslib,
+    config (>= 0.3.1),
+    data.table,
+    datamods,
+    dplyr,
+    esquisse,
+    ggplot2,
+    ggrepel,
+    golem (>= 0.3.5),
+    janitor,
+    magrittr,
+    metan,
+    pkgload,
+    plyr,
+    R6,
+    reactable,
+    readxl,
+    rhandsontable,
+    shiny (>= 1.7.4),
+    shinyalert,
+    shinyWidgets,
+    stats,
+    tidyr,
+    utils
+Suggests: 
+    knitr,
+    rmarkdown,
+    spelling,
+    testthat (>= 3.0.0)
+VignetteBuilder: 
+    knitr
+Config/testthat/edition: 3
+Encoding: UTF-8
+Language: en-US
+NeedsCompilation: no
+Packaged: 2023-05-30 16:58:36 UTC; charl
+RoxygenNote: 7.3.2

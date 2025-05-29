@@ -1,0 +1,6 @@
+pandoc: '3.4'
+pkgdown: 2.1.1
+pkgdown_sha: ~
+articles:
+  grapesel: grapesel.html
+last_built: 2024-10-08T19:56Z

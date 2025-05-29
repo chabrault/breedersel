@@ -1,0 +1,33 @@
+{
+    "languages":[
+       "en",
+       "fr"
+    ],
+    "translation":[
+       {
+          "en":"Hello Shiny!",
+          "fr":"Bonjour Shiny !"
+       },
+       {
+          "en":"Number of bins:",
+          "fr":"Nombre de bins"
+       },
+       {
+          "en":"This is description of the plot.",
+          "fr":"Ceci est la description du graphique."
+       },
+       {
+          "en":"Histogram of x",
+          "fr":"Histograme de x"
+       },
+       {
+          "en":"Frequency",
+          "fr":"Fréquence"
+       },
+       {
+        "en":"Data loading",
+        "fr":"Chargement données"
+       }
+       
+    ]
+ }
