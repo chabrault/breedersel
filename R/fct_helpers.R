@@ -20,8 +20,8 @@ calc_mgidi <- function(data, var_more=NULL, var_less=NULL,
                        avg_NA=FALSE){
   #print("in calc_mgidi function")
   `%>%` <- magrittr::`%>%`
-
-
+  
+  
   if(!is.null(rhot_table)){
     rhot_table <- janitor::remove_empty(rhot_table, which = c("rows","cols"))
     vmore <- rhot_table$trait[rhot_table$direction == "max"]
@@ -34,33 +34,39 @@ calc_mgidi <- function(data, var_more=NULL, var_less=NULL,
   # print(paste0("var less: ", vless))
   stopifnot(all(c("genotype",vmore,vless) %in% colnames(data)),
             SI > 0, SI<100)
-
+  
   ## STEP 1: reformat data
   ## set at long format, select columns
-  dt_long <- data %>% dplyr::select(c(genotype,vmore, vless)) %>%
-    tidyr::pivot_longer(cols=c(vmore, vless))
-
+  dt_long <- data %>% dplyr::select(all_of(c("genotype",vmore, vless))) %>%
+    tidyr::pivot_longer(cols=c(vmore, vless),
+                        names_to="name",values_to="value") 
+  
   ## group and average trait values by genotype
   dt_mean_long <- dt_long %>%
     dplyr::group_by(genotype,name) %>%
     dplyr::summarise(Mean=mean(value, na.rm=TRUE))
-
+  #print(head(dt_mean_long))
+  
   ## re-set at wide format
   dt_mean_wide <- dt_mean_long %>%
-    tidyr::pivot_wider(values_from=Mean)
-
-  dt_mean_wide <- as.data.frame(dt_mean_wide)
+    tidyr::pivot_wider(values_from=Mean) %>%
+    as.data.frame()
+  #print(head(dt_mean_wide))
+  
+  ## if selected, use the population mean to replace NAs
   if(avg_NA){
     dt_mean_wide[,c(vmore,vless)] <- apply(dt_mean_wide[,c(vmore,vless)],2,
                                            function(x){
                                              tidyr::replace_na(x, replace=mean(x, na.rm=TRUE))
                                            }
-                                           )
+    )
   }
-  rownames(dt_mean_wide) <- dt_mean_wide$genotype
-  dt_mean_wide <- dt_mean_wide[,c(vmore,vless),drop=FALSE]
+  ## set rownames to genotype
+  #rownames(dt_mean_wide) <- dt_mean_wide$genotype
+  dt_mean_wide <- dt_mean_wide[,c("genotype",vmore,vless),drop=FALSE]
   dat_mgidi <- na.omit(dt_mean_wide)
-
+  # print(head(dat_mgidi))
+  
   ## STEP 2 Use rhandsontable as input if provided
   if(!is.null(rhot_table)){
     ideotype <- plyr::mapvalues(rhot_table$direction,
@@ -72,7 +78,7 @@ calc_mgidi <- function(data, var_more=NULL, var_less=NULL,
     weights <- rhot_table$weight
     if(is.null(weights)) weights <- rep(1,nrow(rhot_table))
     names(weights) <- rhot_table$trait
-
+    
     ## for optimum values, calculate difference between each observation and optimum
     for(tr in rhot_table$trait[rhot_table$direction == "opti"]){
       dat_mgidi[[tr]] <- abs(dat_mgidi[[tr]] - rhot_table$opti_val[rhot_table$trait == tr])
@@ -82,8 +88,8 @@ calc_mgidi <- function(data, var_more=NULL, var_less=NULL,
                rep("l",length(var_less)))
     if(is.null(weights)) weights <- rep(1,length(ideotype))
   }
-
-
+  
+  
   # print(colnames(dat_mgidi))
   # print(ideotype[colnames(dat_mgidi)])
   # print(weights[colnames(dat_mgidi)])
@@ -92,23 +98,24 @@ calc_mgidi <- function(data, var_more=NULL, var_less=NULL,
                             use_data="pheno",
                             SI=SI, # selection intensity
                             mineval=mineval, # value for number of factors retained
-                            ideotype=ideotype[colnames(dat_mgidi)],
-                            weights=weights[colnames(dat_mgidi)],
+                            ideotype=ideotype[colnames(dat_mgidi)[-1]],
+                            weights=weights[colnames(dat_mgidi)[-1]],
                             use="pairwise.complete.obs", verbose=FALSE)
   if(length(res_mgidi) > 1){
     write("mgidi applied with success", stderr())
   }
   res_mgidi$MGIDI$MGIDI <- round(res_mgidi$MGIDI$MGIDI,2)
-  dt_mean_wide$Genotype <- rownames(dt_mean_wide)
+  #dt_mean_wide$Genotype <- rownames(dt_mean_wide)
+  dt_mean_wide <- rename(dt_mean_wide, Genotype=genotype)
   dt_mean_wide <- relocate(dt_mean_wide,Genotype)
-
+  
   res_mgidi$sel_dif[,c("Xo","Xs","SD", "SDperc","goal")] <-
     apply(res_mgidi$sel_dif[,c("Xo","Xs","SD", "SDperc","goal")], 2, round, 2)
-
+  
   return(list(res_mgidi=res_mgidi,
               data_mean=dt_mean_wide)
   )
-
+  
 }
 
 

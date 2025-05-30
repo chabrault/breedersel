@@ -25,6 +25,8 @@ app_ui <- function(request) {
                   fixed=TRUE,
                   
                   # bs4SidebarHeader("Menu"),
+                  #selectInput("lang", "Language", choices = c("English" = "en", "Français" = "fr"), selected = "en"),
+                  
                   
                   bs4SidebarMenu(
                     bs4SidebarMenuItem("Data loading",
@@ -173,14 +175,14 @@ golem_add_external_resources <- function() {
   golem::add_resource_path("www", app_sys("app/www"))
   golem::add_resource_path('logo', app_sys('app/logo'))
   golem::add_resource_path('ex_tab', app_sys('app/ex_tab'))
-  
+  #golem::add_resource_path("www", "inst/app/www")
   tags$head(
     favicon(ico = "favicon", resources_path = "www", ext = "png"),
     bundle_resources(
       path = app_sys("app/www"),
       app_title = "grapesel"
     ),
-    # ✅ Force Bootstrap tooltip re-init
+    # force Bootstrap tooltip re-init
     tags$script(HTML("
       $(document).on('shiny:connected', function() {
         $('[data-toggle=\"tooltip\"]').tooltip({trigger: 'hover'});

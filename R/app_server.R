@@ -8,6 +8,17 @@
 app_server <- function(input, output, session) {
   # Your application server logic
   shiny::shinyOptions(bootstrapTheme = bslib::bs_theme(version = 4L))
+  
+  ## initialize translation
+  # i18n <- datamods::i18n$new(
+  #   translation_csv = "www/translations.csv",
+  #   language = "en"
+  # )
+  # 
+  # observeEvent(input$lang, {
+  #   i18n$set_language(input$lang)
+  # })
+  
   # create R6 object to store data
   data_r6 <- R6::R6Class(
     "dataInR6",
@@ -26,11 +37,6 @@ app_server <- function(input, output, session) {
   data_r6$final <- reactive(data_r6$raw())
 
   ### Table of data
-  # output$output_data <- shiny::renderUI({
-  #   #radiant.data::view_data(data_r6$filtered())
-  #   radiant.data::dtab(data_r6$final())
-  # })
-
   output$output_data <- reactable::renderReactable(
     reactable::reactable(data_r6$final(),
                          rownames=FALSE,

@@ -248,9 +248,20 @@ mod_MGIDI_server <- function(id,data_r6){
       res_mgidi <- reactive({
         req(input$actionmgidi)
         dt <- data_r6$final()
+        ## Check if the data has the required columns
+        if (!"genotype" %in% colnames(dt)) {
+          shinyalert::shinyalert("Error", "Missing 'genotype' column in the data.", type = "error")
+          return(NULL)
+        }
+        rhot <- req(rhandsontable::hot_to_r(input$tabVar))
+        if (!all(na.omit(rhot$trait) %in% colnames(dt))) {
+          shinyalert::shinyalert("Error", "Some selected traits are not found in the data.", type = "error")
+          return(NULL)
+        }
+        
         ## calc_mgidi is a function called from fct_helpers.R
         res <- calc_mgidi(data=dt,
-                          rhot_table=req(rhandsontable::hot_to_r(input$tabVar)),
+                          rhot_table=rhot,
                           SI=req(input$sliderSI),
                           avg_NA=req(input$avgNA))
         #print(res_mgidi()$sel_gen)

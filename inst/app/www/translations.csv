@@ -1,0 +1,8 @@
+key	en	fr
+load_button	Load file	Charger un fichier
+genotype_label	Genotype	Génotype
+select_vars	Select variables	Sélectionner les variables
+reset_filter	Restart filters	Recommencer la filtration
+valid	Valid	Valider
+download_tab	Download	Télécharger
+download_tab_filt	Download filtered data	Télécharger le tableau filtré

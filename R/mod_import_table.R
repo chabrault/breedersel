@@ -107,9 +107,33 @@ mod_import_table_server <- function(id){
     observeEvent(input$confirm_genotype, {
       req(imported$data(), input$genotype_column)
       df <- imported$data()
+      
+      # Case 1: user selected a column already named "genotype"
+      if (input$genotype_column == "genotype") {
+        if (sum(names(df) == "genotype") > 1) {
+          shinyalert::shinyalert("Error", "Multiple 'genotype' columns detected.", type = "error")
+          return()
+        }
+        dat(df)
+        return()
+      }
+      
+      # Case 2: user selected a different column, but "genotype" already exists
+      if ("genotype" %in% names(df)) {
+        shinyalert::shinyalert(
+          "Error",
+          paste0("The dataset already has a 'genotype' column.\n",
+                 "Please remove it or rename it in your input file."),
+          type = "error"
+        )
+        return()
+      }
+      
+      # Safe to rename
       colnames(df)[colnames(df) == input$genotype_column] <- "genotype"
       dat(df)
     })
+    
     
     return(dat)
 
