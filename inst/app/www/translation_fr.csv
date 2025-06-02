@@ -1,0 +1,52 @@
+en,fr
+Hello,Bonjour
+Click me,Cliquez-moi
+Internationalized App,Application multilingue
+Grape selector,Sélecteur de cépages
+Data loading,Chargement des données
+Table of data,Tableau de données
+Data filtering,Filtrage des données
+MGIDI,MGIDI
+Magic graph,Graphique magique
+About,À propos
+Data table,Table de données
+Filtering?,Filtrer ?
+Creation of a multivariate selection index,Création d’un indice de sélection multivariée
+Custom plot,Graphique personnalisé
+Launch esquisse app,Lancer l’application esquisse
+Grape Selector application,Application Sélecteur de cépages
+Author: Charlotte Brault,Auteur : Charlotte Brault
+Send email,Envoyer un courriel
+Project: Vitis Explorer,Projet : Vitis Explorer
+Version of the application:,Version de l’application :
+Importation of external data. The table must contain a column named ‘genotype’,Importation de données externes. La table doit contenir une colonne nommée ‘genotype’.
+Choose genotype column,Choisir la colonne génotype
+Download filtered data,Télécharger les données filtrées
+Reference genotype(s) to pin on top:,Génotype(s) de référence à épingler en haut :
+Variable(s) to filter,Variable(s) à filtrer
+Restart filters,Réinitialiser les filtres
+Selection index table,Tableau de l’indice de sélection
+Replace missing values by population average?,Remplacer les valeurs manquantes par la moyenne ?
+Selection intensity,Intensité de sélection
+Calculate,Calculer
+Type of plot,Type de graphique
+"Strength and weakness of the best genotypes for different factors. The less the contribution to the factor, the best is the performance of the genotype for the traits related to this factor (see below).","Forces et faiblesses des meilleurs génotypes pour différents facteurs. Moins une variable contribue à un facteur, meilleure est la performance du génotype pour les traits liés à ce facteur (voir ci-dessous)."
+Categorization of traits and selection differential,Catégorisation des traits et différentiel de sélection
+Definition of columns:,Définition des colonnes :
+and,et
+indicate the whole population average and the selected population average.,indiquent la moyenne de la population totale et celle de la population sélectionnée.
+indicates the wanted direction (min / max).,indique la direction souhaitée (min / max).
+indicates if the aim has been reached.,indique si l’objectif est atteint.
+Ranking of genotypes,Classement des génotypes
+Download table,Télécharger le tableau
+Correlation plot between variables,Graphique de corrélation entre les variables
+Distribution of population and selected individuals,Distribution de la population et des individus sélectionnés
+Supplementary genotype(s),Génotype(s) supplémentaire(s)
+Variable to plot,Variable à tracer
+Download plot,Télécharger le graphique
+Rsession,Session R
+Change language,Changer la langue
+Number of bins:,Nombre de classes :
+Histogram of x,Histogramme de x
+Frequency,Fréquence
+This is description of the plot.,Ceci est une description du graphique.

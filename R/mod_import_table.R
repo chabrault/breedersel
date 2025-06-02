@@ -29,12 +29,12 @@ mod_import_table_ui <- function(id){
 
         br(),
         shinyWidgets::actionBttn(ns("launch_modal"),
-                                 "Launch import", color="warning",
+                                 i18n$t("Launch import"), color="warning",
                                  size="lg", style="fill"),
 
         shiny::uiOutput(ns("select_genotype_ui")),
         shinyWidgets::actionBttn(ns("confirm_genotype"),
-                                 "Confirm genotype column",
+                                 i18n$t("Confirm genotype column"),
                                  color = "success",
                                  size = "sm", style = "gradient"),
         
@@ -57,6 +57,7 @@ mod_import_table_ui <- function(id){
       )
 
     )
+ 
   )
 }
 

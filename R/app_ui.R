@@ -5,7 +5,9 @@
 #' @import shiny
 #' @importFrom shiny fluidPage fluidRow actionButton column tabsetPanel insertTab
 #' @importFrom bs4Dash bs4DashPage dashboardHeader bs4DashSidebar bs4SidebarHeader sidebarMenu bs4SidebarMenu bs4SidebarMenuItem bs4SidebarMenuSubItem dashboardBody tabItem bs4TabItem bs4TabItems tabItems
-#' @importFrom datamods i18n
+#' @importFrom shiny.i18n Translator usei18n
+#' @importFrom shiny NS tagList
+
 #' @noRd
 
 app_ui <- function(request) {
@@ -55,9 +57,18 @@ app_ui <- function(request) {
                   bs4TabItems(
                     bs4TabItem(tabName = "TabUpload",
                                shiny::fluidPage(
-                                 mod_import_table_ui("import_table_1")
+                                 shiny.i18n::usei18n(i18n),
+                                 shiny::selectInput(
+                                   inputId = "selected_language",
+                                   label = i18n$t("Change language"),
+                                   #choices = setNames(i18n$get_languages(), c("English", "Français")),
+                                   choices = translator$get_languages(),
+                                   selected = i18n$get_key_translation()),
                                  
+                                 
+                                 mod_import_table_ui("import_table_1")
                                )
+                               
                     ),
                     
                     
