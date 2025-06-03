@@ -175,25 +175,32 @@ mod_MGIDI_ui <- function(id){
         closable = FALSE,
         maximizable = TRUE,
         solidHeader = TRUE,
+        status="navy",
         sidebar=bs4Dash::bs4CardSidebar(
           id=ns("sidePlot"),
           background = "#333a40",
           startOpen = TRUE,
           width=25,
-
           easyClose = FALSE,
           uiOutput(ns("vars2Plot")),
           uiOutput(ns("extraGeno"))
 
 
         ),
-        status="navy",
         column(9,
                plotOutput(ns("DistribInd")),
                shinyWidgets::downloadBttn(ns("downloadPlotDist"),"Download plot",
                                           style = "bordered",color = "primary")
         )
 
+      ),
+      ## adding table of phenotypes with ranked traits
+      bs4Dash::box(
+        width = 12,
+        title = "Table of phenotypes with ranked traits",
+        status = "olive",
+        solidHeader = TRUE,
+        DT::dataTableOutput(ns("ranked_traits_table"))
       )
     )
   )
@@ -441,7 +448,7 @@ mod_MGIDI_server <- function(id,data_r6){
           }
         )
 
-
+        ## Correlation plot
         output$corrplot <- renderPlot({
           dat <- req(res_mgidi()$data_mean)%>%
             dplyr::select(-Genotype)
@@ -458,6 +465,75 @@ mod_MGIDI_server <- function(id,data_r6){
             ggsave(file,plot=ggplot2::last_plot(), width=11, height=6, scale=1.2)
           }
         )
+        ## Ranked traits table
+        output$ranked_traits_table <- DT::renderDT({
+          req(res_mgidi(), input$actionmgidi)
+          
+          # Get MGIDI table and mean values
+          scores <- res_mgidi()$res_mgidi$MGIDI
+          mean_data <- res_mgidi()$data_mean
+          
+          # Traits used in selection
+          rhot <- req(rhandsontable::hot_to_r(input$tabVar))
+          selected_traits <- na.omit(rhot$trait)
+          direction <- na.omit(rhot$direction)
+          names(direction) <- na.omit(rhot$trait)
+          
+          # Merge MGIDI score into trait table
+          df <- merge(scores, mean_data, by = "Genotype", all.x = TRUE)
+          df <- df[order(df$MGIDI), ]
+          
+          # Add extra genotypes (e.g. from filtering)
+          extra_geno <- input$genotypesPlot
+          if (!is.null(extra_geno)) {
+            missing_geno <- setdiff(extra_geno, df$Genotype)
+            if (length(missing_geno) > 0) {
+              extra_rows <- mean_data[mean_data$Genotype %in% missing_geno, ]
+              scores_missing <- data.frame(Genotype = missing_geno, MGIDI = NA_real_)
+              extra_df <- merge(scores_missing, extra_rows, by = "Genotype")
+              df <- rbind(df, extra_df)
+            }
+          }
+          
+          # Subset to relevant columns
+          # print(selected_traits)
+          # print(colnames(df))
+          df <- df[, c("Genotype", "MGIDI", selected_traits), drop = FALSE]
+          
+          # Build datatable
+          dt <- DT::datatable(
+            df,
+            rownames = FALSE,
+            extensions = c("ColReorder"),
+            filter = "top",
+            options = list(
+              scrollX = TRUE,
+              pageLength = 20,
+              colReorder = TRUE,
+              dom = '<<t>Bp>',
+              class = 'compact stripe hover row-border order-column',
+              columnDefs = list(list(className = 'dt-center', targets = "_all"))
+            )
+          )
+          
+          # Apply red-green color per trait
+          for (trait in selected_traits) {
+            x <- df[[trait]]
+            brks <- quantile(x, probs = seq(0.05, 0.95, 0.01), na.rm = TRUE)
+            cols <- paletteer::paletteer_c(
+              "ggthemes::Temperature Diverging",
+              n = length(brks) + 1,
+              direction = ifelse(direction[[trait]] == "min", 1, -1)
+            )
+            dt <- DT::formatStyle(dt, trait, backgroundColor = DT::styleInterval(brks, cols))
+          }
+          
+          return(dt)
+        })
+        
+        
+        
+        
       }, ignoreInit=TRUE) #observeEvent input$variablesPlot
 
     }, ignoreInit=TRUE) # observeEvent calculate MGIDI

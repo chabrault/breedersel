@@ -19,34 +19,34 @@ mod_import_table_ui <- function(id){
         status = "success",
         maximizable = F,
         closable = F,
-        width = 9,
-
+        width = 12,
+        
         h5("Importation of external data. The table must contain a column named 'genotype'."),
         br(),
         tags$a(href='ex_tab/table_PlosOne_Laucou2018.csv',
                "Example file of phenotypic data from Laucou et al. (2018)",
                align = "left"),
-
+        
         br(),
         shinyWidgets::actionBttn(ns("launch_modal"),
                                  "Launch import", color="warning",
-                                 size="lg", style="fill"),
-
+                                 size="lg", style="bordered"),
+        
         shiny::uiOutput(ns("select_genotype_ui")),
         shinyWidgets::actionBttn(ns("confirm_genotype"),
                                  "Confirm genotype column",
-                                 color = "success",
-                                 size = "sm", style = "gradient"),
+                                 color = "warning",
+                                 size = "sm", style = "bordered"),
         
         shinyWidgets::actionBttn(ns("test_file"),
                                  "Test file", color="warning",
                                  size="lg", style="bordered")
-
+        
       )
     ),
-
+    
     fluidRow(
-
+      
       column(
         width = 11,
         tags$h3("Imported data:"),
@@ -55,7 +55,7 @@ mod_import_table_ui <- function(id){
         #                     width = "100%")
         reactable::reactableOutput(ns("data"))
       )
-
+      
     )
   )
 }
@@ -72,7 +72,8 @@ mod_import_table_server <- function(id){
       # req(input$from)
       datamods::import_modal(
         id = ns("import_modal"),
-        from = c("file","copypaste"),
+        #from = c("file","copypaste"),
+        from = c("file", "copypaste", "googlesheets", "url"),
         file_extensions = c(".csv", ".txt", ".xls", ".xlsx", ".rds", ".fst", ".sas7bdat",".sav",".tsv"),
         size="xl",
         title = "Data import"
@@ -83,18 +84,18 @@ mod_import_table_server <- function(id){
                                         return_class = "data.frame",
                                         read_fns = list(
                                           xlsx = function(file, sheet, skip) {
-                                            readxl::read_excel(path = file, sheet = sheet, skip = skip, na = c("DM"))
+                                            readxl::read_excel(path = file, sheet = sheet, skip = skip, na = c("DM","NA","-"))
                                           },
                                           xls = function(file, sheet, skip) {
-                                            readxl::read_excel(path = file, sheet = sheet, skip = skip, na = c("DM"))
+                                            readxl::read_excel(path = file, sheet = sheet, skip = skip, na = c("DM","NA","-"))
                                           }
                                         )
     )
-
-
+    
+    
     #dat <- reactive(req(imported$data()))
     
-    # store column renamed to 'genotype'
+    # store the imported data in a reactive value
     dat <- reactiveVal()
     
     # show UI to choose the genotype column
@@ -107,6 +108,8 @@ mod_import_table_server <- function(id){
     observeEvent(input$confirm_genotype, {
       req(imported$data(), input$genotype_column)
       df <- imported$data()
+      
+      
       
       # Case 1: user selected a column already named "genotype"
       if (input$genotype_column == "genotype") {
@@ -133,38 +136,38 @@ mod_import_table_server <- function(id){
       colnames(df)[colnames(df) == input$genotype_column] <- "genotype"
       dat(df)
     })
+    #return(dat)
     
-    
-    return(dat)
-
     
     observeEvent(input$test_file,{
-      cols <- isolate(as.character(colnames(req(imported$data()))))
-      coltype <- isolate(sapply(req(imported$data()), class))
-
+      dfreq <- req(dat())
+      #print(str(dat()))
+      cols <- colnames(dfreq)
+      coltype <- sapply(dfreq, class)
       msg <- "Everything is perfect!"
       type <- "success"
-
+      
       if(length(intersect("genotype",cols)) != 1){
         msg <- "Missing 'genotype' column"
         type <- "error"
       }
-
+      
       if(length(coltype[coltype %in% c("numeric","integer")]) < 2){
         msg <- "Not enough numeric variables"
         type <- "error"
       }
       shinyalert::shinyalert("Test file input",  text=msg, type=type)
+      
     })
-
-
-
+    
+    
+    
     output$name <- renderPrint({
       req(imported$name())
       imported$name()
     })
-
-
+    
+    
     output$data <- reactable::renderReactable(
       reactable::reactable(req(dat()),
                            rownames=FALSE,
@@ -182,11 +185,11 @@ mod_import_table_server <- function(id){
                            height=700
       )
     )
-
+    
     #return(reactive(imported$data()))
     return(reactive(dat()))
   })
-
+  
   #})
 }
 
