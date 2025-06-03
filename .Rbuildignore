@@ -5,3 +5,7 @@
 ^app\.R$
 ^rsconnect$
 ^\.rscignore$
+^LICENSE\.md$
+^doc$
+^Meta$
+^codecov\.yml$

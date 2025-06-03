@@ -1,13 +1,10 @@
-Package: grapesel
-Title: Grapevine Selector
+Package: breedersel
+Title: Breeder Selection
 Version: 0.0.0.9000
 Authors@R: 
-    person("Charlotte", "Brault", , "charlotte.brault@live.com", role = c("cre", "aut"))
+    person("Charlotte", "Brault", , "charlotte.brault@live.com", role = c("aut", "cre"))
 Author: Charlotte Brault [cre, aut]
-Maintainer: Charlotte Brault <charlotte.brault@live.com>
-Description: Provide guides to select new grapevine varieties based on a
-    multivariate selection index. Takes various tables as input with a
-    column 'genotype' and other variable columns.
+Description: PKG_DESC.
 License: MIT + file LICENSE
 Imports: 
     bs4Dash,
@@ -16,13 +13,16 @@ Imports:
     data.table,
     datamods,
     dplyr,
+    DT,
     esquisse,
     ggplot2,
     ggrepel,
+    ggthemes,
     golem (>= 0.3.5),
     janitor,
     magrittr,
     metan,
+    paletteer,
     plyr,
     R6,
     reactable,

@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/reference/test_package.html#special-files
 
 library(testthat)
-library(grapesel)
+library(breedersel)
 
-test_check("grapesel")
+test_check("breedersel")

@@ -19,13 +19,13 @@
 ## to change the name in the app_sys() function in app_config.R /!\
 ##
 golem::fill_desc(
-  pkg_name = "testGo", # The name of the golem package containing the app (typically lowercase, no underscore or periods)
-  pkg_title = "PKG_TITLE", # What the Package Does (One Line, Title Case, No Period)
+  pkg_name = "breedersel", # The name of the golem package containing the app (typically lowercase, no underscore or periods)
+  pkg_title = "Breeder Selection", # What the Package Does (One Line, Title Case, No Period)
   pkg_description = "PKG_DESC.", # What the package does (one paragraph).
   authors = person(
-    given = "AUTHOR_FIRST", # Your First Name
-    family = "AUTHOR_LAST", # Your Last Name
-    email = "AUTHOR@MAIL.COM", # Your email
+    given = "Charlotte", # Your First Name
+    family = "Brault", # Your Last Name
+    email = "charlotte.brault@live.com", # Your email
     role = c("aut", "cre") # Your role (here author/creator)
   ),
   repo_url = NULL, # The URL of the GitHub repo (optional),
@@ -65,7 +65,7 @@ usethis::use_git()
 ## Sets the remote associated with 'name' to 'url'
 usethis::use_git_remote(
   name = "origin",
-  url = "https://github.com/<OWNER>/<REPO>.git"
+  url = "https://github.com/chabrault/grapesel.git"
 )
 
 # You're now set! ----
