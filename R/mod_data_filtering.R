@@ -144,9 +144,20 @@ mod_data_filtering_server <- function(id, data_r6){
       } else {
         df <- df_filtered
       }
-      
+      numeric_cols <- names(df)[sapply(df, is.numeric)]
       reactable::reactable(
         df,
+        columns = setNames(
+          lapply(numeric_cols, function(col) {
+            reactable::colDef(
+              format = reactable::colFormat(digits = 2),
+              align = "center"
+            )
+          }),
+          numeric_cols
+        ),
+        defaultColDef = reactable::colDef(align = "center"),
+        
         rowStyle = function(index) {
           if (df$genotype[index] %in% input$ref_genotypes) {
             list(background = "#ffeeba")

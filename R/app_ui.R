@@ -140,12 +140,11 @@ app_ui <- function(request) {
                                           verbatimTextOutput("Rsession"),
                                           br()
                                         ),
-                                        
+                                        ## to comment? Or refer to grapesel on Zenodo?
                                         fluidRow(
                                           column(4,tags$img(src='logo/FranceAgriMer-logo.png', height="120px")),
                                           column(4,tags$img(src='logo/Logo-MAA-CASDAR.png', height="100px")),
                                           column(4,tags$img(src='logo/cniv-logo.jpeg', height="100px")),
-                                          
                                           column(12,br()),
                                           column(5,tags$img(src='logo/INRAE_color.png', height="100px"), offset=1),
                                           column(5,tags$img(src='logo/IFV_nom.png', height="150px"))
@@ -180,7 +179,7 @@ golem_add_external_resources <- function() {
     favicon(ico = "favicon", resources_path = "www", ext = "png"),
     bundle_resources(
       path = app_sys("app/www"),
-      app_title = "grapesel"
+      app_title = "breedsel"
     ),
     # force Bootstrap tooltip re-init
     tags$script(HTML("

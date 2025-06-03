@@ -279,7 +279,8 @@ mod_MGIDI_server <- function(id,data_r6){
       RVplots$SW <- isolate({
 
         metan:::plot.mgidi(req(res_mgidi()$res_mgidi),
-                           type="contribution", radar=req(input$type)) +
+                           type="contribution", 
+                           radar=req(input$type)) +
           ggplot2::theme(text=ggplot2::element_text(size=17),
                          axis.text.x=element_text(angle=ifelse(req(input$type),0,90)))
 
@@ -369,7 +370,7 @@ mod_MGIDI_server <- function(id,data_r6){
         shinyWidgets::pickerInput(
           ns("genotypesPlot"),
           "Supplementary genotype(s)",
-          choices = c(unique(res_mgidi()$data_mean$Genotype)),
+          choices = c(unique(res_mgidi()$data_mean$genotype)),
           multiple=TRUE,
           options=shinyWidgets::pickerOptions(liveSearch=T,
                                               maxOptions=20,
@@ -386,12 +387,12 @@ mod_MGIDI_server <- function(id,data_r6){
         ## prepare plot
         ### gather data for distribution and selected genotypes
         dat <- req(res_mgidi()$data_mean)
-        dat.sel <- dat[res_mgidi()$res_mgidi$sel_gen,]
-        dat.sel <- merge(dat.sel, res_mgidi()$res_mgidi$MGIDI)
+        dat.sel <- dat[match(res_mgidi()$res_mgidi$sel_gen, dat$genotype),]
+        dat.sel <- merge(dat.sel, res_mgidi()$res_mgidi$MGIDI, by="genotype")
 
         ## other selected genotypes
         if(length(input$genotypesPlot) > 0){
-          dat.supp <- dat[dat$Genotype %in% input$genotypesPlot,]
+          dat.supp <- dat[dat$genotype %in% input$genotypesPlot,]
           dat.sel <- plyr::rbind.fill(dat.sel, dat.supp)
         }
         ### summary statistics
@@ -410,26 +411,27 @@ mod_MGIDI_server <- function(id,data_r6){
         RVplots$Dist <-  isolate({
 
           ggplot(dat, aes(x=.data[[req(input$variablesPlot)]]))+
-            geom_density(color = '#619CFF') +
-
+            geom_density(color = 'skyblue') +
             geom_area(data = subset(df.dens, x >= q15.9 & x <= q84.1), # 1 Std 68.2%
-                      aes(x=x,y=y), fill='#619CFF', alpha=0.8) +
+                      aes(x=x,y=y), fill='skyblue', alpha=0.8) +
             geom_area(data = subset(df.dens, x >= q2.3 & x <= q97.7), # 2 Std 95.4%
-                      aes(x=x,y=y), fill='#619CFF', alpha=0.6) +
+                      aes(x=x,y=y), fill='skyblue', alpha=0.6) +
             geom_area(data = subset(df.dens, x >= q0.01 & x <= q99.9), # 3 Std 99.8%
-                      aes(x=x,y=y), fill='#619CFF', alpha=0.3) +
+                      aes(x=x,y=y), fill='skyblue', alpha=0.3) +
             geom_vline(xintercept=meanx, color="grey60", linewidth=1.5, linetype="dashed") +
             geom_vline(xintercept=medx, color='#FFFFFF',linewidth=1.5, linetype="dashed") +
             ggtitle(req(input$variablesPlot)) +
             geom_rug(alpha=0.8) +
             ggrepel::geom_label_repel(data=dat.sel,
                                       mapping = aes(x=.data[[input$variablesPlot]],y=0,
-                                                    label=Genotype,
+                                                    label=genotype,
                                                     fill=MGIDI),
                                       direction="y",point.padding = 0.01,
                                       force_pull = 0.1,size=6,
                                       vjust=0.6, max.overlaps = Inf,
-                                      color="black",fontface="bold",alpha=0.7) +
+                                      color="black",
+                                      #fontface="bold",
+                                      alpha=0.7) +
             scale_fill_viridis_c(begin=0.35, direction=1,option="H")+
             theme_bw() +
             theme(text=element_text(size=16),
@@ -451,7 +453,7 @@ mod_MGIDI_server <- function(id,data_r6){
         ## Correlation plot
         output$corrplot <- renderPlot({
           dat <- req(res_mgidi()$data_mean)%>%
-            dplyr::select(-Genotype)
+            dplyr::select(-genotype)
           #print(str(dat))
           plot(x=metan::corr_coef(data=dat, use="pairwise.complete.obs"),
                size.text.cor = 4, size.text.lab=12)
@@ -465,56 +467,71 @@ mod_MGIDI_server <- function(id,data_r6){
             ggsave(file,plot=ggplot2::last_plot(), width=11, height=6, scale=1.2)
           }
         )
+        
         ## Ranked traits table
         output$ranked_traits_table <- DT::renderDT({
           req(res_mgidi(), input$actionmgidi)
           
           # Get MGIDI table and mean values
           scores <- res_mgidi()$res_mgidi$MGIDI
-          mean_data <- res_mgidi()$data_mean
+          data <- data_r6$final()
+          #mean_data <- res_mgidi()$data_mean
           
           # Traits used in selection
           rhot <- req(rhandsontable::hot_to_r(input$tabVar))
-          selected_traits <- na.omit(rhot$trait)
-          direction <- na.omit(rhot$direction)
+          selected_traits <- rhot$trait[!is.na(rhot$trait)]
+          direction <- rhot$direction[!is.na(rhot$direction)]
+          weights <- rhot$weight[!is.na(rhot$weight)]
+          if(length(unique(weights)) < 2) {
+            weights <- rep(1, length(selected_traits))
+          }
           names(direction) <- na.omit(rhot$trait)
           
           # Merge MGIDI score into trait table
-          df <- merge(scores, mean_data, by = "Genotype", all.x = TRUE)
+          df <- merge(scores, data, by = "genotype", all.x = TRUE)
           df <- df[order(df$MGIDI), ]
           
           # Add extra genotypes (e.g. from filtering)
           extra_geno <- input$genotypesPlot
           if (!is.null(extra_geno)) {
-            missing_geno <- setdiff(extra_geno, df$Genotype)
+            missing_geno <- setdiff(extra_geno, df$genotype)
             if (length(missing_geno) > 0) {
-              extra_rows <- mean_data[mean_data$Genotype %in% missing_geno, ]
-              scores_missing <- data.frame(Genotype = missing_geno, MGIDI = NA_real_)
-              extra_df <- merge(scores_missing, extra_rows, by = "Genotype")
-              df <- rbind(df, extra_df)
+              extra_rows <- mean_data[mean_data$genotype %in% missing_geno, ]
+              scores_missing <- data.frame(genotype = missing_geno, MGIDI = NA_real_)
+              extra_df <- merge(scores_missing, extra_rows, by = "genotype")
+              df <- rbind(extra_df,df)
             }
           }
           
           # Subset to relevant columns
-          # print(selected_traits)
-          # print(colnames(df))
-          df <- df[, c("Genotype", "MGIDI", selected_traits), drop = FALSE]
-          
+          ## order columns based on being in the selection index and by highest weight
+          selected_traits <- selected_traits[order(weights, decreasing = T)]
+          df <- dplyr::relocate(df,all_of(c("genotype","MGIDI",selected_traits)))
+
           # Build datatable
+          numeric_cols <- names(df)[sapply(df, is.numeric)]
           dt <- DT::datatable(
             df,
             rownames = FALSE,
-            extensions = c("ColReorder"),
-            filter = "top",
+            extensions =list("ColReorder" = NULL,
+                             "Buttons" = NULL),
+                             #"Scroller"=NULL),
+            filter=list(position="top"),#, clear=F,selection = "multiple"),
             options = list(
-              scrollX = TRUE,
-              pageLength = 20,
+              scrollX = TRUE,#scrollY=400,
+              autoWidth = TRUE,
+              #Scroller=TRUE,deferRender =TRUE,scrollY=400,
+              pageLength = 10,
               colReorder = TRUE,
               dom = '<<t>Bp>',
+              buttons = c('copy', 'excel','csv', 'pdf', 'print'),
               class = 'compact stripe hover row-border order-column',
               columnDefs = list(list(className = 'dt-center', targets = "_all"))
             )
           )
+          # Round numeric columns to 2 decimals
+          numeric_cols <- names(df)[sapply(df, is.numeric)]
+          dt <- DT::formatRound(dt, columns = numeric_cols, digits = 2)
           
           # Apply red-green color per trait
           for (trait in selected_traits) {
@@ -523,7 +540,7 @@ mod_MGIDI_server <- function(id,data_r6){
             cols <- paletteer::paletteer_c(
               "ggthemes::Temperature Diverging",
               n = length(brks) + 1,
-              direction = ifelse(direction[[trait]] == "min", 1, -1)
+              direction = ifelse(direction[[trait]] == "max", -1, 1)
             )
             dt <- DT::formatStyle(dt, trait, backgroundColor = DT::styleInterval(brks, cols))
           }

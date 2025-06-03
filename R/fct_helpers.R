@@ -101,14 +101,18 @@ calc_mgidi <- function(data, var_more=NULL, var_less=NULL,
                             ideotype=ideotype[colnames(dat_mgidi)[-1]],
                             weights=weights[colnames(dat_mgidi)[-1]],
                             use="pairwise.complete.obs", verbose=FALSE)
-  if(length(res_mgidi) > 1){
-    write("mgidi applied with success", stderr())
-  }
+  # if(length(res_mgidi) > 1){
+  #   write("mgidi applied with success", stderr())
+  # }
+  dt_mean_wide <- dt_mean_wide %>% 
+    mutate_if(is.numeric, round, 2)
   res_mgidi$MGIDI$MGIDI <- round(res_mgidi$MGIDI$MGIDI,2)
-  #dt_mean_wide$Genotype <- rownames(dt_mean_wide)
-  dt_mean_wide <- rename(dt_mean_wide, Genotype=genotype)
-  dt_mean_wide <- relocate(dt_mean_wide,Genotype)
-  
+  # dt_mean_wide$genotype <- rownames(dt_mean_wide)
+  # #dt_mean_wide <- rename(dt_mean_wide, Genotype=genotype)
+  # dt_mean_wide <- relocate(dt_mean_wide,genotype)
+  res_mgidi$MGIDI <- dplyr::rename(res_mgidi$MGIDI, genotype=Genotype)
+  # print(colnames(res_mgidi$MGIDI))
+  # print(colnames(dt_mean_wide))
   res_mgidi$sel_dif[,c("Xo","Xs","SD", "SDperc","goal")] <-
     apply(res_mgidi$sel_dif[,c("Xo","Xs","SD", "SDperc","goal")], 2, round, 2)
   
