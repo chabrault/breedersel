@@ -9,3 +9,6 @@
 ^doc$
 ^Meta$
 ^codecov\.yml$
+^README\.Rmd$
+^CODE_OF_CONDUCT\.md$
+^data-raw$

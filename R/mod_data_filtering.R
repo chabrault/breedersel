@@ -76,11 +76,14 @@ mod_data_filtering_server <- function(id, data_r6){
     sel_vars <- reactiveVal(NULL)
     
     output$VarFilt <- renderUI({
-      selectInput(
+      shinyWidgets::pickerInput(
         ns("var_selected"),
         "Variable(s) to filter",
         choices = colnames(req(all_data())),
         multiple = TRUE,
+        options=shinyWidgets::pickerOptions(liveSearch=T,
+                                            actionsBox=TRUE,
+                                            virtualScroll = 200),
         selected = sel_vars()
       )
     })
@@ -122,10 +125,14 @@ mod_data_filtering_server <- function(id, data_r6){
     # Reference selector
     output$reference_selector <- renderUI({
       req(all_data())
-      shiny::selectInput(
+      shinyWidgets::pickerInput(
         ns("ref_genotypes"),
         label = "Reference genotype(s) to pin on top:",
         choices = unique(all_data()$genotype),
+        options=shinyWidgets::pickerOptions(liveSearch=T,
+                                            maxOptions=20,
+                                            actionsBox=TRUE,
+                                            virtualScroll = 200),
         selected = NULL,
         multiple = TRUE
       )

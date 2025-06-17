@@ -26,8 +26,8 @@ golem::add_module(name = "mod_MGIDI", with_test = FALSE) # Name of the module
 
 ## Add helper functions ----
 ## Creates fct_* and utils_*
-golem::add_fct("helpers", with_test = TRUE)
-golem::add_utils("helpers", with_test = TRUE)
+golem::add_fct("helpers", with_test = FALSE)
+golem::add_utils("helpers", with_test = FALSE)
 
 ## External resources
 ## Creates .js and .css files at inst/app/www
@@ -72,18 +72,18 @@ usethis::use_github_action()
 usethis::use_github_action_check_release()
 usethis::use_github_action_check_standard()
 usethis::use_github_action_check_full()
-# Add action for PR
-usethis::use_github_action_pr_commands()
-
-# Circle CI
-usethis::use_circleci()
-usethis::use_circleci_badge()
-
-# Jenkins
-usethis::use_jenkins()
-
-# GitLab CI
-usethis::use_gitlab_ci()
+# # Add action for PR
+# usethis::use_github_action_pr_commands()
+#
+# # Circle CI
+# usethis::use_circleci()
+# usethis::use_circleci_badge()
+# 
+# # Jenkins
+# usethis::use_jenkins()
+# 
+# # GitLab CI
+# usethis::use_gitlab_ci()
 
 # You're now set! ----
 # go to dev/03_deploy.R

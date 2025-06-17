@@ -5,7 +5,7 @@ Authors@R:
     person("Charlotte", "Brault", , "charlotte.brault@live.com", role = c("aut", "cre"))
 Author: Charlotte Brault [cre, aut]
 Description: PKG_DESC.
-License: MIT + file LICENSE
+License: GPL (>= 3)
 Imports: 
     bs4Dash,
     bslib,

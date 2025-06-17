@@ -72,7 +72,7 @@ app_server <- function(input, output, session) {
   observeEvent(input$valid_filtVars,{#req(data_r6$raw()),{#input$valid_filtVars,{
     data_r6$updated <- reactive(data_r6$raw())
     #print(paste0("ncol updated data: ",ncol(isolate(data_r6$updated()))))
-    mod_data_filtering_server("filt_data",data_r6=data_r6)
+    mod_data_filtering_server("filt_data",data_r6=data_r6) 
     #print(paste0("ncol filtered data: ",ncol(isolate(data_r6$final()))))
   }, ignoreInit=TRUE
   )
@@ -87,14 +87,14 @@ app_server <- function(input, output, session) {
     esquisse::esquisse_server(id="esquisse",
                               data_rv = reactiveValues(data=data_r6$final(),
                                                        name="data_r6"),
-                              default_aes = c("fill", "color", "size", "group", "facet"))
+                              default_aes = c("fill", "color", "size", "group", "facet","label"))
   },ignoreInit = TRUE)
 
 
 
   ## About / Rsession
   output$pkgVersion <- renderText(
-    as.character(utils::packageVersion("grapesel")))
+    as.character(utils::packageVersion("breedersel")))
 
   output$Rsession <- renderPrint(
     print(utils::sessionInfo())

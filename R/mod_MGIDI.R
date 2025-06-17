@@ -31,7 +31,7 @@ mod_MGIDI_ui <- function(id){
   tagList(
     fluidRow(
       # theme = shinytheme("darkly"),
-
+      
       tags$head(tags$style(HTML(css))),
       bs4Dash::box(
         width=12,
@@ -52,10 +52,10 @@ mod_MGIDI_ui <- function(id){
         p("Adjust the selection intensity to keep more or less genotypes."),
         footer=p("[1] Olivoto, T., & Nardino, M. (2021). MGIDI: Toward an effective multivariate selection in biological experiments.
                  Bioinformatics, 37(10), 1383–1389.", tags$a(href="https://doi.org/10.1093/bioinformatics/btaa981","https://doi.org/10.1093/bioinformatics/btaa981"))
-
-
+        
+        
       ),
-
+      
       bs4Dash::box(
         width=12,
         #height="550px",
@@ -64,16 +64,16 @@ mod_MGIDI_ui <- function(id){
         maximizable = TRUE,
         status="maroon",
         solidHeader = TRUE,
-
-
+        
+        
         ## Right sidebar: select variables and plot options
         sidebar=bs4Dash::bs4CardSidebar(
           id=ns("sidePlot"),
           #style="overflow-y: hidden; overflow-x: auto;",
           startOpen = TRUE,
-          width=33,
+          width=35,
           easyClose = FALSE,
-
+          
           # fluidPage(
           tags$h5("Selection index table"),
           ## editable table
@@ -92,7 +92,7 @@ mod_MGIDI_ui <- function(id){
           br(),
           shinyWidgets::actionBttn(ns("actionmgidi"),"Calculate",
                                    style = "jelly",color = "default")
-
+          
           #  )
         ),
         ## plot output part
@@ -116,7 +116,7 @@ mod_MGIDI_ui <- function(id){
                p("The less the contribution to the factor, the best is the performance of the genotype for the traits related to this factor (see below).")
         )
       ),
-
+      
       bs4Dash::box(
         width=8,
         #height="500px",
@@ -146,12 +146,12 @@ mod_MGIDI_ui <- function(id){
         maximizable = TRUE,
         status="lightblue",
         solidHeader = TRUE,
-
+        
         reactable::reactableOutput(ns("tab_mgidi")),
         br(),
         shinyWidgets::downloadBttn(ns("DWNLD"),"Download table",
                                    style = "bordered",color = "primary")
-
+        
       ),
       bs4Dash::box(
         width=9,
@@ -165,9 +165,9 @@ mod_MGIDI_ui <- function(id){
         plotOutput(ns("corrplot")),
         shinyWidgets::downloadBttn(ns("downloadPlotCorr"),"Download plot",
                                    style = "bordered",color = "primary")
-
+        
       ),
-
+      
       bs4Dash::box(
         width=12,
         height="500px",
@@ -184,15 +184,15 @@ mod_MGIDI_ui <- function(id){
           easyClose = FALSE,
           uiOutput(ns("vars2Plot")),
           uiOutput(ns("extraGeno"))
-
-
+          
+          
         ),
         column(9,
                plotOutput(ns("DistribInd")),
                shinyWidgets::downloadBttn(ns("downloadPlotDist"),"Download plot",
                                           style = "bordered",color = "primary")
         )
-
+        
       ),
       ## adding table of phenotypes with ranked traits
       bs4Dash::box(
@@ -213,15 +213,15 @@ mod_MGIDI_ui <- function(id){
 mod_MGIDI_server <- function(id,data_r6){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
-
+    
     RVplots <- reactiveValues()
-
+    
     ## Create rhandsontable table to fill with selection index
     DFrhand <- as.data.frame(matrix(NA,nrow=6,ncol=4))
     colnames(DFrhand) <- c("trait","direction","opti_val","weight")
     output$tabVar <- rhandsontable::renderRHandsontable({
       rhot <-
-        rhandsontable::rhandsontable(data=DFrhand, width=500) %>%
+        rhandsontable::rhandsontable(data=DFrhand, width=550) %>%
         rhandsontable::hot_rows(rowHeights = 32) %>%
         rhandsontable::hot_table(overflow="auto",highlightCol=TRUE,
                                  highlightRow=TRUE,rowHeaderWidth=0) %>%
@@ -233,7 +233,7 @@ mod_MGIDI_server <- function(id,data_r6){
         rhandsontable::hot_validate_numeric(col="weight",min=0, max=1) %>%
         rhandsontable::hot_cols(halign="htCenter",valign="htMiddle",
                                 #   manualColumnResize=TRUE,
-                                colWidths = c(150,70,75,75),
+                                colWidths = c(145,70,70,70),
                                 renderer = "function (instance, td, row, col, prop, value, cellProperties) {
              Handsontable.renderers.NumericRenderer.apply(this, arguments);
               td.style.color = 'black';
@@ -245,11 +245,11 @@ mod_MGIDI_server <- function(id,data_r6){
       filename = paste0("table_index_",format(Sys.time(),"%Y-%m-%d_%H%M"),".tsv"),
       content = function(fname){
         write.table(req(rhandsontable::hot_to_r(input$tabVar)),sep="\t",
-                  fname, row.names=FALSE, fileEncoding="UTF-8")
+                    fname, row.names=FALSE, fileEncoding="UTF-8")
       }
     )
-
-
+    
+    
     ## Calculate MGIDI scores
     observeEvent(c(input$actionmgidi, input$type),{
       res_mgidi <- reactive({
@@ -274,22 +274,22 @@ mod_MGIDI_server <- function(id,data_r6){
         #print(res_mgidi()$sel_gen)
         res
       })
-
+      
       ## Plot strength / weakness
       RVplots$SW <- isolate({
-
+        
         metan:::plot.mgidi(req(res_mgidi()$res_mgidi),
                            type="contribution", 
                            radar=req(input$type)) +
           ggplot2::theme(text=ggplot2::element_text(size=17),
                          axis.text.x=element_text(angle=ifelse(req(input$type),0,90)))
-
+        
       }) # end isolate
-
+      
       output$StrenWeak <- renderPlot({
         req(RVplots$SW)
       })
-
+      
       ## save strength / weakness plot
       output$downloadPlot_SW <- downloadHandler(
         filename = function(){paste0("StrengthWeakPlot_",format(Sys.time(),"%Y-%m-%d_%H%M"),".png")},
@@ -297,7 +297,7 @@ mod_MGIDI_server <- function(id,data_r6){
           ggplot2::ggsave(file,plot=req(RVplots$SW),width=11, height=6, scale=1.2)
         }
       )
-
+      
       ## Table of selection differential
       output$sel_diff <- reactable::renderReactable(
         reactable::reactable(req(res_mgidi()$res_mgidi$sel_dif),
@@ -315,20 +315,20 @@ mod_MGIDI_server <- function(id,data_r6){
                              #width=500,
                              fullWidth = TRUE,
                              compact=TRUE
-
+                             
         )
       )
-
+      
       ## Local download for user
       output$DWNLD_SelDiff <- downloadHandler(
         filename = paste0("table_selectionDiff_",format(Sys.time(),"%Y-%m-%d_%H%M"),".tsv"),
         content = function(fname){
           write.table(req(res_mgidi()$res_mgidi$sel_dif),sep="\t",
-                    fname, row.names=FALSE, fileEncoding="UTF-8")
+                      fname, row.names=FALSE, fileEncoding="UTF-8")
         }
       )
-
-
+      
+      
       ## Table of MGIDI scores
       output$tab_mgidi <- reactable::renderReactable(
         reactable::reactable(res_mgidi()$res_mgidi$MGIDI,
@@ -351,10 +351,10 @@ mod_MGIDI_server <- function(id,data_r6){
         filename = paste0("MGIDI_scores_",format(Sys.time(),"%Y-%m-%d_%H%M"),".tsv"),
         content = function(fname){
           write.table(req(res_mgidi()$res_mgidi$MGIDI),sep="\t",
-                    fname, row.names=FALSE, fileEncoding="UTF-8")
+                      fname, row.names=FALSE, fileEncoding="UTF-8")
         }
       )
-
+      
       ## user selection of variable to plot
       output$vars2Plot <- renderUI({
         selectInput(
@@ -379,17 +379,17 @@ mod_MGIDI_server <- function(id,data_r6){
           selected = NULL
         )
       })
-
+      
       ### Plot distribution of phenotype with selected indiv
       observeEvent(c(input$variablesPlot, input$sliderSI,input$genotypesPlot),{
-
+        
         req(input$variablesPlot)
         ## prepare plot
         ### gather data for distribution and selected genotypes
         dat <- req(res_mgidi()$data_mean)
         dat.sel <- dat[match(res_mgidi()$res_mgidi$sel_gen, dat$genotype),]
         dat.sel <- merge(dat.sel, res_mgidi()$res_mgidi$MGIDI, by="genotype")
-
+        
         ## other selected genotypes
         if(length(input$genotypesPlot) > 0){
           dat.supp <- dat[dat$genotype %in% input$genotypesPlot,]
@@ -407,9 +407,9 @@ mod_MGIDI_server <- function(id,data_r6){
         medx  <- median(x,na.rm=TRUE)
         x.dens  <- density(x,na.rm=TRUE)
         df.dens <- data.frame(x=x.dens$x, y=x.dens$y)
-
+        
         RVplots$Dist <-  isolate({
-
+          
           ggplot(dat, aes(x=.data[[req(input$variablesPlot)]]))+
             geom_density(color = 'skyblue') +
             geom_area(data = subset(df.dens, x >= q15.9 & x <= q84.1), # 1 Std 68.2%
@@ -436,11 +436,11 @@ mod_MGIDI_server <- function(id,data_r6){
             theme_bw() +
             theme(text=element_text(size=16),
                   axis.text.x = element_text(size=rel(1.5)))
-
+          
         }) # end isolate
-
+        
         output$DistribInd <- renderPlot({req(RVplots$Dist)})
-
+        
         output$downloadPlotDist <- downloadHandler(
           filename = function(){
             paste(req(input$variablesPlot),"_DistribIndexPlot_",
@@ -449,7 +449,7 @@ mod_MGIDI_server <- function(id,data_r6){
             ggsave(file,plot=req(RVplots$Dist), width=11, height=6, scale=1.2)
           }
         )
-
+        
         ## Correlation plot
         output$corrplot <- renderPlot({
           dat <- req(res_mgidi()$data_mean)%>%
@@ -458,7 +458,7 @@ mod_MGIDI_server <- function(id,data_r6){
           plot(x=metan::corr_coef(data=dat, use="pairwise.complete.obs"),
                size.text.cor = 4, size.text.lab=12)
         })
-
+        
         output$downloadPlotCorr <- downloadHandler(
           filename = function(){
             paste("CorrPlot_",
@@ -492,22 +492,34 @@ mod_MGIDI_server <- function(id,data_r6){
           df <- df[order(df$MGIDI), ]
           
           # Add extra genotypes (e.g. from filtering)
-          extra_geno <- input$genotypesPlot
-          if (!is.null(extra_geno)) {
-            missing_geno <- setdiff(extra_geno, df$genotype)
-            if (length(missing_geno) > 0) {
-              extra_rows <- mean_data[mean_data$genotype %in% missing_geno, ]
-              scores_missing <- data.frame(genotype = missing_geno, MGIDI = NA_real_)
-              extra_df <- merge(scores_missing, extra_rows, by = "genotype")
-              df <- rbind(extra_df,df)
+          observe({
+            req(input$genotypesPlot, input$ref_genotypes)
+            extra_geno <- unique(c(input$genotypesPlot, input$ref_genotypes))
+            print(extra_geno)
+            
+            
+            
+            extra_geno <- unique(c(input$genotypesPlot,input$ref_genotypes))
+            print(extra_geno)
+            if (!is.null(extra_geno)) {
+              
+              supp_geno <- setdiff(extra_geno, df$genotype)
+              if (length(supp_geno) > 0) {
+                extra_rows <- mean_data[mean_data$genotype %in% supp_geno, ]
+                mgidi_supp <- data.frame(genotype = supp_geno, MGIDI = NA_real_)
+                extra_df <- merge(mgidi_supp, extra_rows, by = "genotype")
+                df <- rbind(extra_df,df)
+              }
+              ## put selected individuals at the top
+              df <- rbind(df[df$genotype %in% extra_geno, ], df[!df$genotype %in% extra_geno, ])
             }
-          }
+          })
           
           # Subset to relevant columns
           ## order columns based on being in the selection index and by highest weight
           selected_traits <- selected_traits[order(weights, decreasing = T)]
           df <- dplyr::relocate(df,all_of(c("genotype","MGIDI",selected_traits)))
-
+          
           # Build datatable
           numeric_cols <- names(df)[sapply(df, is.numeric)]
           dt <- DT::datatable(
@@ -515,7 +527,7 @@ mod_MGIDI_server <- function(id,data_r6){
             rownames = FALSE,
             extensions =list("ColReorder" = NULL,
                              "Buttons" = NULL),
-                             #"Scroller"=NULL),
+            #"Scroller"=NULL),
             filter=list(position="top"),#, clear=F,selection = "multiple"),
             options = list(
               scrollX = TRUE,#scrollY=400,
@@ -525,6 +537,14 @@ mod_MGIDI_server <- function(id,data_r6){
               colReorder = TRUE,
               dom = '<<t>Bp>',
               buttons = c('copy', 'excel','csv', 'pdf', 'print'),
+              
+              # buttons = list(
+              #   list(extend = "copy", exportOptions = list(modifier = list(page = "all"))),
+              #   list(extend = "csv", exportOptions = list(modifier = list(page = "all"))),
+              #   list(extend = "excel", exportOptions = list(modifier = list(page = "all"))),
+              #   list(extend = "pdf", exportOptions = list(modifier = list(page = "all"))),
+              #   list(extend = "print", exportOptions = list(modifier = list(page = "all")))
+              # ),
               class = 'compact stripe hover row-border order-column',
               columnDefs = list(list(className = 'dt-center', targets = "_all"))
             )
@@ -546,15 +566,15 @@ mod_MGIDI_server <- function(id,data_r6){
           }
           
           return(dt)
-        })
+        }, server=FALSE) # renderDT
         
         
         
         
       }, ignoreInit=TRUE) #observeEvent input$variablesPlot
-
+      
     }, ignoreInit=TRUE) # observeEvent calculate MGIDI
-
+    
   })
 }
 
