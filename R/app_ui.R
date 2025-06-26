@@ -15,7 +15,7 @@ app_ui <- function(request) {
     bs4DashPage(skin="light",# = "purple",
                 fullscreen = TRUE,
                 freshTheme = bslib::bs_theme(version = 4),
-                header=dashboardHeader(title="Grape selector",
+                header=dashboardHeader(title="Breeder selector",
                                        controlbarIcon=shiny::icon("circle", verify_fa = FALSE)),
                 
                 # ----------- SIDEBAR ------------- #
@@ -74,12 +74,7 @@ app_ui <- function(request) {
                     ## Tab for filtering data
                     bs4TabItem(tabName = "Tabdata",
                                shiny::fluidPage(
-                                 # shiny::column(width=5,
-                                 #               shiny::actionButton("valid_upVars","Modifier les colonnes")),
-                                 #
-                                 # shiny::column(width=12,
-                                 #               datamods::update_variables_ui(id="update_data",title=TRUE),
-                                 # ),
+
                                  shiny::column(width=5,
                                                shinyWidgets::actionBttn("valid_filtVars","Filtering?",
                                                                         style = "pill",

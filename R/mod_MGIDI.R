@@ -213,7 +213,10 @@ mod_MGIDI_ui <- function(id){
 mod_MGIDI_server <- function(id,data_r6){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
-    
+    # observe({
+    #   cat("final data:\n")
+    #   print(str(data_r6$final()))
+    # })
     RVplots <- reactiveValues()
     
     ## Create rhandsontable table to fill with selection index

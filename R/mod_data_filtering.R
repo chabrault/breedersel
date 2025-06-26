@@ -13,12 +13,16 @@ mod_data_filtering_ui <- function(id){
     fluidPage(
       
       column(width = 7,
-             uiOutput(ns("VarFilt")),
+             shiny::uiOutput(ns("VarFilt")),
              
       ),
-      column(width = 5,
-             actionButton(ns("reset_filters"), "Restart filters",
-                          icon = icon("redo"))
+      # column(width = 5,
+      #        shinyWidgets::actionBttn(ns("reset_filters"), "Restart filters",
+      #                                 icon = icon("redo"),style = "unite", color = "danger")
+      # ),
+      column(width = 4,
+             shinyWidgets::actionBttn(ns("valid_filters"), "Validate filters",
+                                      style = "unite", color = "danger")
       ),
       
       column(width = 10,
@@ -27,7 +31,7 @@ mod_data_filtering_ui <- function(id){
                                       max_height = "600px")
       )
     ),
-    
+    br(),
     column(
       width = 10,
       shinyWidgets::progressBar(
@@ -73,54 +77,83 @@ mod_data_filtering_server <- function(id, data_r6){
     ns <- session$ns
     
     all_data <- reactive(req(data_r6$updated()))
-    sel_vars <- reactiveVal(NULL)
+    sel_vars <- reactiveVal()  # start with no variables
     
     output$VarFilt <- renderUI({
+      req(all_data())
       shinyWidgets::pickerInput(
-        ns("var_selected"),
-        "Variable(s) to filter",
-        choices = colnames(req(all_data())),
+        #shiny::selectInput(
+        inputId=ns("var_selected"),
+        label="Variable(s) to filter",
+        choices = colnames(all_data()),
         multiple = TRUE,
-        options=shinyWidgets::pickerOptions(liveSearch=T,
-                                            actionsBox=TRUE,
-                                            virtualScroll = 200),
-        selected = sel_vars()
+        selected = sel_vars(),
+        options = shinyWidgets::pickerOptions(
+          liveSearch = TRUE,
+          actionsBox = TRUE,
+          virtualScroll = 200,
+          maxOptions = 10
+        )
       )
     })
     
-    # Update selection reactively
-    observeEvent(input$var_selected,{
-      sel_vars(input$var_selected)
-    })
     
-    # Reset filters
-    # observeEvent(input$reset_filters, {
-    #   sel_vars(NULL)
-    #   shinyWidgets::updateProgressBar(session=session, id="pbar", value = 0)
+    
+    # observeEvent(input$valid_filters, {
+    #   cat("Clicked validate filter\n")
     # })
     
-    observe({
-      req(merged_data())
-      shinyWidgets::updateProgressBar(
-        session = session,
-        id = "pbar",
-        value = nrow(merged_data()),
-        total = nrow(all_data())
-      )
-    })
+    # observeEvent(input$var_selected, {
+    #   cat("input$var_selected changed:\n")
+    #   print(input$var_selected)
+    # })
     
     # Initialize filter module only once
-    res_filter <- datamods::filter_data_server(
+    observeEvent(input$valid_filters,{
+      
+      # ## print sel_vars() for debugging
+      #observe({
+      # print("Selected variables for filtering:\n")
+      # print(input$var_selected)
+      sel_vars(input$var_selected)
+      #print(sel_vars())
+      
+    })
+    
+    # req(input$var_selected)
+    # req(all_data())
+    
+    res_filter <<- datamods::filter_data_server(
       id = "filtering",
       drop_ids = FALSE,
-      data = reactive(all_data()),
+      data = all_data,
       name = reactive("all_data"),
-      vars = reactive(if (is.null(sel_vars())) character(0) else sel_vars()), ## show none at start
-      defaults = reactive(NULL),
+      vars = sel_vars,
+      #default = character(0),#sel_vars,
+      #vars =reactive(if (is.null(sel_vars())) character(0) else sel_vars()), ## show none at start
+      #defaults = reactive(if (is.null(sel_vars())) character(0) else sel_vars()),#reactive(character(0)),#reactive(NULL),
       widget_num = "slider",
       widget_date = "slider",
       label_na = "NA"
     )
+    
+    
+    ### Update progress bar reactively
+    observe({
+      req(res_filter$filtered())
+      req(all_data())#, )
+      shinyWidgets::updateProgressBar(
+        session = session,
+        id = "pbar",
+        value = ifelse(is.null(res_filter$filtered()),0, 
+                       nrow(res_filter$filtered())),
+        title=paste0("Number of rows remaining: ", 
+                     ifelse(is.null(res_filter$filtered()), 0, nrow(res_filter$filtered())),
+                     "/",nrow(all_data())),
+        total = nrow(all_data())
+      )
+    })
+    
     
     # Reference selector
     output$reference_selector <- renderUI({
@@ -129,14 +162,22 @@ mod_data_filtering_server <- function(id, data_r6){
         ns("ref_genotypes"),
         label = "Reference genotype(s) to pin on top:",
         choices = unique(all_data()$genotype),
-        options=shinyWidgets::pickerOptions(liveSearch=T,
-                                            maxOptions=20,
+        #search=TRUE,
+        options=shinyWidgets::pickerOptions(liveSearch=TRUE,
+                                            maxOptions=10,
                                             actionsBox=TRUE,
                                             virtualScroll = 200),
         selected = NULL,
         multiple = TRUE
       )
     })
+    
+    
+    
+    # observe({
+    #   print("Selected genotypes:\n")
+    #   print(input$ref_genotypes)
+    # })
     
     # Display filtered table with references on top
     output$tableFiltPrint <- reactable::renderReactable({
@@ -199,8 +240,13 @@ mod_data_filtering_server <- function(id, data_r6){
         data.table::fwrite(merged_data(), fname)
       }
     )
+    # observe({
+    #   cat("final data:\n")
+    #   print(str(data_r6$final()))
+    # })
     
     observeEvent(input$valid_filtDat, {
+      #print(str(data_r6$final()))
       return(data_r6)
     }, ignoreInit = TRUE)
   })

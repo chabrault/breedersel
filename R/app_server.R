@@ -8,7 +8,7 @@
 app_server <- function(input, output, session) {
   # Your application server logic
   shiny::shinyOptions(bootstrapTheme = bslib::bs_theme(version = 4L))
-  
+  options(shiny.reactlog = TRUE, shiny.error = browser)
   ## initialize translation
   # i18n <- datamods::i18n$new(
   #   translation_csv = "www/translations.csv",
