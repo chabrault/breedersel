@@ -33,7 +33,7 @@ This README has been compiled on the
 
 ``` r
 Sys.time()
-#> [1] "2025-06-17 13:26:56 CDT"
+#> [1] "2025-06-26 18:18:53 CDT"
 ```
 
 Here are the tests results and package coverage:
@@ -45,7 +45,7 @@ devtools::check(quiet = TRUE)
 #>   method from   
 #>   +.gg   ggplot2
 #> ── R CMD check results ────────────────────────────── breedersel 0.0.0.9000 ────
-#> Duration: 57.3s
+#> Duration: 1m 36.2s
 #> 
 #> ❯ checking code files for non-ASCII characters ... WARNING
 #>   Found the following file with non-ASCII characters:
@@ -75,14 +75,14 @@ devtools::check(quiet = TRUE)
 
 ``` r
 covr::package_coverage()
-#> breedersel Coverage: 56.00%
+#> breedersel Coverage: 55.63%
 #> R/fct_helpers.R: 0.00%
 #> R/run_app.R: 0.00%
-#> R/mod_data_filtering.R: 29.03%
+#> R/mod_data_filtering.R: 27.88%
 #> R/mod_MGIDI.R: 43.13%
 #> R/mod_import_table.R: 67.44%
 #> R/golem_utils_server.R: 77.78%
-#> R/app_server.R: 86.36%
+#> R/app_server.R: 86.67%
 #> R/golem_utils_ui.R: 87.94%
 #> R/app_config.R: 100.00%
 #> R/app_ui.R: 100.00%
