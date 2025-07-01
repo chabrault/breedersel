@@ -194,12 +194,13 @@ mod_MGIDI_ui <- function(id){
         )
         
       ),
-      ## adding table of phenotypes with ranked traits
+      ## adding table of phenotypes with ranked MGIDI
       bs4Dash::box(
         width = 12,
-        title = "Table of phenotypes with ranked traits",
+        title = "Table of data with ranked MGIDI",
         status = "olive",
         solidHeader = TRUE,
+        shiny::uiOutput(ns("reference_selector2")),
         DT::dataTableOutput(ns("ranked_traits_table"))
       )
     )
@@ -228,9 +229,11 @@ mod_MGIDI_server <- function(id,data_r6){
         rhandsontable::hot_rows(rowHeights = 32) %>%
         rhandsontable::hot_table(overflow="auto",highlightCol=TRUE,
                                  highlightRow=TRUE,rowHeaderWidth=0) %>%
-        rhandsontable::hot_col(col="trait",type="dropdown",source=c("",colnames(data_r6$final())[sapply(data_r6$final(), is.numeric)]),
+        rhandsontable::hot_col(col="trait",type="dropdown",
+                               source=c("",colnames(data_r6$final())[sapply(data_r6$final(), is.numeric)]),
                                selectCallback = TRUE) %>%
-        rhandsontable::hot_col(col="direction",type="dropdown",source=c("min","max","opti"), strict=TRUE) %>%
+        rhandsontable::hot_col(col="direction",type="dropdown",
+                               source=c("min","max","opti",NA), strict=TRUE) %>%
         rhandsontable::hot_col(col="opti_val",type="numeric") %>%
         rhandsontable::hot_col(col="weight",type="numeric") %>%
         rhandsontable::hot_validate_numeric(col="weight",min=0, max=1) %>%
@@ -470,112 +473,123 @@ mod_MGIDI_server <- function(id,data_r6){
             ggsave(file,plot=ggplot2::last_plot(), width=11, height=6, scale=1.2)
           }
         )
-        
-        ## Ranked traits table
-        output$ranked_traits_table <- DT::renderDT({
-          req(res_mgidi(), input$actionmgidi)
-          
-          # Get MGIDI table and mean values
-          scores <- res_mgidi()$res_mgidi$MGIDI
-          data <- data_r6$final()
-          #mean_data <- res_mgidi()$data_mean
-          
-          # Traits used in selection
-          rhot <- req(rhandsontable::hot_to_r(input$tabVar))
-          selected_traits <- rhot$trait[!is.na(rhot$trait)]
-          direction <- rhot$direction[!is.na(rhot$direction)]
-          weights <- rhot$weight[!is.na(rhot$weight)]
-          if(length(unique(weights)) < 2) {
-            weights <- rep(1, length(selected_traits))
-          }
-          names(direction) <- na.omit(rhot$trait)
-          
-          # Merge MGIDI score into trait table
-          df <- merge(scores, data, by = "genotype", all.x = TRUE)
-          df <- df[order(df$MGIDI), ]
-          
-          # Add extra genotypes (e.g. from filtering)
-          observe({
-            req(input$genotypesPlot, input$ref_genotypes)
-            extra_geno <- unique(c(input$genotypesPlot, input$ref_genotypes))
-            print(extra_geno)
-            
-            
-            
-            extra_geno <- unique(c(input$genotypesPlot,input$ref_genotypes))
-            print(extra_geno)
-            if (!is.null(extra_geno)) {
-              
-              supp_geno <- setdiff(extra_geno, df$genotype)
-              if (length(supp_geno) > 0) {
-                extra_rows <- mean_data[mean_data$genotype %in% supp_geno, ]
-                mgidi_supp <- data.frame(genotype = supp_geno, MGIDI = NA_real_)
-                extra_df <- merge(mgidi_supp, extra_rows, by = "genotype")
-                df <- rbind(extra_df,df)
-              }
-              ## put selected individuals at the top
-              df <- rbind(df[df$genotype %in% extra_geno, ], df[!df$genotype %in% extra_geno, ])
-            }
-          })
-          
-          # Subset to relevant columns
-          ## order columns based on being in the selection index and by highest weight
-          selected_traits <- selected_traits[order(weights, decreasing = T)]
-          df <- dplyr::relocate(df,all_of(c("genotype","MGIDI",selected_traits)))
-          
-          # Build datatable
-          numeric_cols <- names(df)[sapply(df, is.numeric)]
-          dt <- DT::datatable(
-            df,
-            rownames = FALSE,
-            extensions =list("ColReorder" = NULL,
-                             "Buttons" = NULL),
-            #"Scroller"=NULL),
-            filter=list(position="top"),#, clear=F,selection = "multiple"),
-            options = list(
-              scrollX = TRUE,#scrollY=400,
-              autoWidth = TRUE,
-              #Scroller=TRUE,deferRender =TRUE,scrollY=400,
-              pageLength = 10,
-              colReorder = TRUE,
-              dom = '<<t>Bp>',
-              buttons = c('copy', 'excel','csv', 'pdf', 'print'),
-              
-              # buttons = list(
-              #   list(extend = "copy", exportOptions = list(modifier = list(page = "all"))),
-              #   list(extend = "csv", exportOptions = list(modifier = list(page = "all"))),
-              #   list(extend = "excel", exportOptions = list(modifier = list(page = "all"))),
-              #   list(extend = "pdf", exportOptions = list(modifier = list(page = "all"))),
-              #   list(extend = "print", exportOptions = list(modifier = list(page = "all")))
-              # ),
-              class = 'compact stripe hover row-border order-column',
-              columnDefs = list(list(className = 'dt-center', targets = "_all"))
-            )
-          )
-          # Round numeric columns to 2 decimals
-          numeric_cols <- names(df)[sapply(df, is.numeric)]
-          dt <- DT::formatRound(dt, columns = numeric_cols, digits = 2)
-          
-          # Apply red-green color per trait
-          for (trait in selected_traits) {
-            x <- df[[trait]]
-            brks <- quantile(x, probs = seq(0.05, 0.95, 0.01), na.rm = TRUE)
-            cols <- paletteer::paletteer_c(
-              "ggthemes::Temperature Diverging",
-              n = length(brks) + 1,
-              direction = ifelse(direction[[trait]] == "max", -1, 1)
-            )
-            dt <- DT::formatStyle(dt, trait, backgroundColor = DT::styleInterval(brks, cols))
-          }
-          
-          return(dt)
-        }, server=FALSE) # renderDT
-        
-        
-        
-        
-      }, ignoreInit=TRUE) #observeEvent input$variablesPlot
       
+      
+      
+      # Select genotypes to pin on top for the final table
+      output$reference_selector2 <- renderUI({
+        req(res_mgidi())
+        shinyWidgets::pickerInput(
+          ns("ref_genotypes2"),
+          "Supplementary genotype(s)",
+          choices = c(unique(res_mgidi()$data_mean$genotype)),
+          multiple=TRUE,
+          options=shinyWidgets::pickerOptions(liveSearch=T,
+                                              maxOptions=20,
+                                              actionsBox=TRUE,
+                                              virtualScroll = 200),
+          selected = NULL
+        )
+      })
+      
+      
+      ## Final table of ranked MGIDI with all columns
+      output$ranked_traits_table <- DT::renderDT({
+        req(res_mgidi(), input$actionmgidi)
+        
+        # Get MGIDI table and mean values
+        scores <- res_mgidi()$res_mgidi$MGIDI
+        data <- data_r6$final()
+        #mean_data <- res_mgidi()$data_mean
+        
+        # Traits used in selection
+        rhot <- req(rhandsontable::hot_to_r(input$tabVar))
+        selected_traits <- rhot$trait[!is.na(rhot$trait)]
+        direction <- rhot$direction[!is.na(rhot$direction)]
+        weights <- rhot$weight[!is.na(rhot$weight)]
+        if(length(unique(weights)) < 2) {
+          weights <- rep(1, length(selected_traits))
+        }
+        names(direction) <- na.omit(rhot$trait)
+        
+        # Merge MGIDI score into trait table
+        df <- merge(scores, data, by = "genotype", all.x = TRUE)
+        df <- df[order(df$MGIDI), ]
+        
+        ## Add extra genotypes 
+        if (!is.null(input$ref_genotypes2) && length(input$ref_genotypes2) > 0) {
+          #print(input$ref_genotypes2)
+          ref_rows <- df[df$genotype %in% input$ref_genotypes2,]
+          ## retrieve missing genotypes
+          if (length(input$ref_genotypes2) > nrow(ref_rows)) {
+            missing_genos <- setdiff(input$ref_genotypes2, df$genotype)
+            dat.supp <- req(res_mgidi()$data_mean) %>%
+              dplyr::filter(genotype %in% missing_genos) %>%
+              dplyr::mutate(MGIDI=NA, .after="genotype")
+            ref_rows <- rbind(ref_rows, dat.supp)
+          }
+          rest <- df[!df$genotype %in% input$ref_genotypes2, ]
+          df_print <- rbind(ref_rows, rest)
+        } else {
+          df_print <- df
+        }
+        
+        
+        # Subset to relevant columns
+        ## order columns based on being in the selection index and by highest weight
+        selected_traits <- selected_traits[order(weights, decreasing = T)]
+        df_print <- dplyr::relocate(df_print,all_of(c("genotype","MGIDI",selected_traits)))
+        
+        # Build datatable
+        numeric_cols <- names(df_print)[sapply(df_print, is.numeric)]
+        dt <- DT::datatable(
+          df_print,
+          rownames = FALSE,
+          extensions =list("ColReorder" = NULL,
+                           "Buttons" = NULL),
+          #"Scroller"=NULL),
+          filter=list(position="top"),#, clear=F,selection = "multiple"),
+          options = list(
+            scrollX = TRUE,#scrollY=400,
+            autoWidth = TRUE,
+            #Scroller=TRUE,deferRender =TRUE,scrollY=400,
+            pageLength = 10,
+            colReorder = TRUE,
+            dom = '<<t>Bp>',
+            buttons = c('copy', 'excel','csv', 'pdf', 'print'),
+            class = 'compact stripe hover row-border order-column',
+            columnDefs = list(list(className = 'dt-center', targets = "_all"))
+          )
+        )
+        # Round numeric columns to 2 decimals
+        numeric_cols <- names(df)[sapply(df, is.numeric)]
+        dt <- DT::formatRound(dt, columns = numeric_cols, digits = 2)
+        
+        # Apply red-green color per trait
+        direction[["MGIDI"]] <- "min"
+        for (trait in c("MGIDI",selected_traits)) {
+          x <- df_print[[trait]]
+          brks <- quantile(x, probs = seq(0.05, 0.95, 0.01), na.rm = TRUE)
+          cols <- paletteer::paletteer_c(
+            "ggthemes::Temperature Diverging",
+            n = length(brks) + 1,
+            direction = ifelse(direction[[trait]] == "max", -1, 1)
+          )
+          dt <- DT::formatStyle(dt, trait, backgroundColor = DT::styleInterval(brks, cols))
+        }
+        
+        ## Color the genotype names of reference genotypes in honeydew color
+        if (!is.null(input$ref_genotypes2) && length(input$ref_genotypes2) > 0) {
+          req(input$ref_genotypes2)
+          dt <- DT::formatStyle(dt, "genotype",
+                                backgroundColor = DT::styleEqual(input$ref_genotypes2, "grey"))
+        }
+        
+        return(dt)
+      }, server=FALSE) # renderDT
+      
+      }, ignoreInit=TRUE) #observeEvent input$variablesPlot
+
     }, ignoreInit=TRUE) # observeEvent calculate MGIDI
     
   })

@@ -208,7 +208,7 @@ mod_data_filtering_server <- function(id, data_r6){
         
         rowStyle = function(index) {
           if (df$genotype[index] %in% input$ref_genotypes) {
-            list(background = "#ffeeba")
+            list(background = "grey")
           } else {
             NULL
           }

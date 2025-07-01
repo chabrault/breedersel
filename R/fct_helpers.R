@@ -64,7 +64,13 @@ calc_mgidi <- function(data, var_more=NULL, var_less=NULL,
   ## set rownames to genotype
   #rownames(dt_mean_wide) <- dt_mean_wide$genotype
   dt_mean_wide <- dt_mean_wide[,c("genotype",vmore,vless),drop=FALSE]
-  dat_mgidi <- na.omit(dt_mean_wide)
+  
+  ## scale variables
+  dt_mean_wide <- dplyr::mutate_if(dt_mean_wide,is.numeric, round, 2)
+  dat_mgidi <- dt_mean_wide
+  dat_mgidi[,c(vmore,vless)] <- apply(dat_mgidi[,c(vmore,vless)],2,scale, 
+                                      center=TRUE, scale=TRUE)
+  dat_mgidi <- na.omit(dat_mgidi)
   # print(head(dat_mgidi))
   
   ## STEP 2 Use rhandsontable as input if provided
@@ -94,27 +100,37 @@ calc_mgidi <- function(data, var_more=NULL, var_less=NULL,
   # print(ideotype[colnames(dat_mgidi)])
   # print(weights[colnames(dat_mgidi)])
   ## STEP 3 apply mgidi
+  traits <- colnames(dat_mgidi)[-1]
   res_mgidi <- metan::mgidi(.data=dat_mgidi,
                             use_data="pheno",
                             SI=SI, # selection intensity
                             mineval=mineval, # value for number of factors retained
-                            ideotype=ideotype[colnames(dat_mgidi)[-1]],
-                            weights=weights[colnames(dat_mgidi)[-1]],
+                            ideotype=ideotype[traits],
+                            weights=weights[traits],
                             use="pairwise.complete.obs", verbose=FALSE)
   # if(length(res_mgidi) > 1){
   #   write("mgidi applied with success", stderr())
   # }
-  dt_mean_wide <- dt_mean_wide %>% 
-    mutate_if(is.numeric, round, 2)
-  res_mgidi$MGIDI$MGIDI <- round(res_mgidi$MGIDI$MGIDI,2)
+  
+  res_mgidi$MGIDI$MGIDI <- round(res_mgidi$MGIDI$MGIDI,3)
   # dt_mean_wide$genotype <- rownames(dt_mean_wide)
   # #dt_mean_wide <- rename(dt_mean_wide, Genotype=genotype)
   # dt_mean_wide <- relocate(dt_mean_wide,genotype)
   res_mgidi$MGIDI <- dplyr::rename(res_mgidi$MGIDI, genotype=Genotype)
   # print(colnames(res_mgidi$MGIDI))
   # print(colnames(dt_mean_wide))
-  res_mgidi$sel_dif[,c("Xo","Xs","SD", "SDperc","goal")] <-
-    apply(res_mgidi$sel_dif[,c("Xo","Xs","SD", "SDperc","goal")], 2, round, 2)
+  
+  ## TODO: recalculate selection differential with unscaled data
+  ## STEP 4 calculate selection differential
+  seldiff <- data.frame(trait=traits,
+                        Xo=colMeans(dt_mean_wide[,traits], na.rm=TRUE),
+                        Xs=colMeans(dt_mean_wide[dt_mean_wide$genotype %in% res_mgidi$sel_gen,traits], na.rm=TRUE))
+  seldiff$SD <- abs(seldiff$Xs - seldiff$Xo)
+  seldiff$SDperc <- round(seldiff$SD / abs(seldiff$Xo) * 100, 2)
+  seldiff <- cbind(seldiff, res_mgidi$sel_dif[match(traits,res_mgidi$sel_dif$VAR),c("Factor","sense","goal")])
+  res_mgidi$sel_dif <- seldiff
+  # res_mgidi$sel_dif[,c("Xo","Xs","SD", "SDperc","goal")] <-
+  #   apply(res_mgidi$sel_dif[,c("Xo","Xs","SD", "SDperc","goal")], 2, round, 3)
   
   return(list(res_mgidi=res_mgidi,
               data_mean=dt_mean_wide)
