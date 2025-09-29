@@ -9,126 +9,69 @@
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
+The goal of breedersel is to provide a user-friendly interface to do
+sample selection from a dataset. This package contains one function
+which runs a Shiny App.
+
 ## Installation
 
-You can install the development version of `{breedersel}` like so:
+You can install the development version of breedersel from
+[GitHub](https://github.com/) with:
 
 ``` r
+# install.packages("pak")
+pak::pak("chabrault/breedersel")
+# or
 devtools::install_github("chabrault/breedersel")
-#> Using GitHub PAT from the git credential store.
-#> Downloading GitHub repo chabrault/breedersel@HEAD
-#> Warning in untar2(tarfile, files, list, exdir, restore_times): skipping pax
-#> global extended headers
-#> Warning in untar2(tarfile, files, list, exdir, restore_times): skipping pax
-#> global extended headers
-#> xfun      (0.52  -> 0.53   ) [CRAN]
-#> rmarkdown (2.29  -> 2.30   ) [CRAN]
-#> forcats   (1.0.0 -> 1.0.1  ) [CRAN]
-#> vroom     (1.6.5 -> 1.6.6  ) [CRAN]
-#> rio       (1.2.3 -> 1.2.4  ) [CRAN]
-#> waiter    (0.2.5 -> 0.2.5.1) [CRAN]
-#> Installing 6 packages: xfun, rmarkdown, forcats, vroom, rio, waiter
-#> package 'xfun' successfully unpacked and MD5 sums checked
-#> Warning: cannot remove prior installation of package 'xfun'
-#> Warning in file.copy(savedcopy, lib, recursive = TRUE): problem copying
-#> C:\Users\cbrault\AppData\Local\Programs\R\R-4.5.1\library\00LOCK\xfun\libs\x64\xfun.dll
-#> to
-#> C:\Users\cbrault\AppData\Local\Programs\R\R-4.5.1\library\xfun\libs\x64\xfun.dll:
-#> Permission denied
-#> Warning: restored 'xfun'
-#> package 'rmarkdown' successfully unpacked and MD5 sums checked
-#> package 'forcats' successfully unpacked and MD5 sums checked
-#> package 'vroom' successfully unpacked and MD5 sums checked
-#> package 'rio' successfully unpacked and MD5 sums checked
-#> package 'waiter' successfully unpacked and MD5 sums checked
-#> 
-#> The downloaded binary packages are in
-#>  C:\Users\cbrault\AppData\Local\Temp\Rtmp4qSXjb\downloaded_packages
-#> ── R CMD build ─────────────────────────────────────────────────────────────────
-#>       ✔  checking for file 'C:\Users\cbrault\AppData\Local\Temp\Rtmp4qSXjb\remotes8df09cd12e6\chabrault-breedersel-22573ff/DESCRIPTION' (466ms)
-#>       ─  preparing 'breedersel':
-#>    checking DESCRIPTION meta-information ...     checking DESCRIPTION meta-information ...   ✔  checking DESCRIPTION meta-information
-#>       ─  excluding invalid files
-#>    Subdirectory 'R' contains invalid file names:
-#>      '_disable_autoload.R'
-#>       ─  checking for LF line-endings in source and make files and shell scripts
-#>   ─  checking for empty or unneeded directories
-#>       ─  building 'breedersel_0.0.0.9000.tar.gz'
-#>      
-#> 
 ```
 
-## Run
+## Input dataset
+
+You need a file with a column identifying the genotype and several
+numerical traits in other columns. File format includes “csv”, “tsv”,
+“xlsx” (with tab selection). It is preferable to have genotype-adjusted
+values instead of have multiple replicated values for each genotype.
+
+## Launch the ShinyApp
 
 You can launch the application by running:
 
 ``` r
+library(breedersel)
 breedersel::run_app()
 ```
 
-## About
+## Analysis steps
 
-You are reading the doc about version : 0.0.0.9000
+1.  Load input dataset. Modify or delete the columns in the import
+    panel, check the type of columns (numeric or character). Validate
+    which column corresponds to the genotype.
 
-This README has been compiled on the
+2.  View the dataset (optional)
 
-``` r
-Sys.time()
-#> [1] "2025-09-29 11:49:42 CDT"
-```
+3.  Filter the list of genotype by the value of the columns (optional)
+    Select the columns to filter on. Move the slider or select the
+    categories for character columns. You can track the number of rows
+    left in your dataset and add back check genotypes. Once you’re done
+    with the filtering, validate the table.
 
-Here are the tests results and package coverage:
+4.  Apply a multi-trait selection index (MGIDI) Fill the selection index
+    table:
 
-``` r
-devtools::check(quiet = TRUE)
-#> ℹ Loading breedersel
-#> ── R CMD check results ────────────────────────────── breedersel 0.0.0.9000 ────
-#> Duration: 1m 42.5s
-#> 
-#> ❯ checking code files for non-ASCII characters ... WARNING
-#>   Found the following file with non-ASCII characters:
-#>     R/mod_MGIDI.R
-#>   Portable packages must use only ASCII characters in their R code and
-#>   NAMESPACE directives, except perhaps in comments.
-#>   Use \uxxxx escapes for other characters.
-#>   Function 'tools::showNonASCIIfile' can help in finding non-ASCII
-#>   characters in files.
-#> 
-#> ❯ checking for hidden files and directories ... NOTE
-#>   Found the following hidden files and directories:
-#>     .RDataTmp
-#>     .RDataTmp1
-#>   These were most likely included in error. See section 'Package
-#>   structure' in the 'Writing R Extensions' manual.
-#> 
-#> ❯ checking top-level files ... NOTE
-#>   File
-#>     LICENSE
-#>   is not mentioned in the DESCRIPTION file.
-#>   Non-standard files/directories found at top level:
-#>     'csv' 'dev' 'docs' 'translations'
-#> 
-#> ❯ checking dependencies in R code ... NOTE
-#>   Namespace in Imports field not imported from: 'ggthemes'
-#>     All declared Imports should be used.
-#>   Unexported object imported by a ':::' call: 'metan:::plot.mgidi'
-#>     See the note in ?`:::` about the use of this operator.
-#> 
-#> 0 errors ✔ | 1 warning ✖ | 3 notes ✖
-#> Error: R CMD check found WARNINGs
-```
+- Select the trait (double click and select a trait from the list).
+- Select min/max/opti for the direction of selection (for example, you
+  may want to maximize yield - so select “max” for yield trait), “opti”
+  corresponds to an optimum value.
+- If you have selected “opti”, indicate the optimal value.
+- Indicate a numeric relative weight to apply for all the traits
+  (optional, assumed an equal weight for all the traits if not filled).
 
-``` r
-covr::package_coverage()
-#> breedersel Coverage: 52.15%
-#> R/fct_helpers.R: 0.00%
-#> R/run_app.R: 0.00%
-#> R/mod_data_filtering.R: 28.05%
-#> R/mod_MGIDI.R: 38.13%
-#> R/mod_import_table.R: 67.44%
-#> R/golem_utils_server.R: 77.78%
-#> R/app_server.R: 84.78%
-#> R/golem_utils_ui.R: 87.94%
-#> R/app_config.R: 100.00%
-#> R/app_ui.R: 100.00%
-```
+Once the selection index table is filled, select the intensity of
+selection (% of genotypes retained), and click on the “Analyze” button.
+The selection index will be applied on the filtered dataset if this step
+was not skipped.
+
+5.  Custom graphics Drag and drop the columns into the different
+    elements to build a custom plot. Select the type of plot (depends on
+    the input), modify the legend, label, color palette, plot theme, and
+    output the figure.
