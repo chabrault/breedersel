@@ -13,7 +13,7 @@ output: github_document
 )
 ```
 
-# `{breedersel}`
+# breedersel
 
 <!-- badges: start -->
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
@@ -24,7 +24,7 @@ output: github_document
 You can install the development version of `{breedersel}` like so:
 
 ```{r}
-# FILL THIS IN! HOW CAN PEOPLE INSTALL YOUR DEV PACKAGE?
+devtools::install_github("chabrault/breedersel")
 ```
 
 ## Run
