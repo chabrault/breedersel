@@ -4,6 +4,7 @@
 #'     DO NOT REMOVE.
 #' @import shiny
 #' @import dplyr
+#' @importFrom esquisse esquisse_server
 #' @noRd
 app_server <- function(input, output, session) {
   # Your application server logic
@@ -87,7 +88,8 @@ app_server <- function(input, output, session) {
     esquisse::esquisse_server(id="esquisse",
                               data_rv = reactiveValues(data=data_r6$final(),
                                                        name="data_r6"),
-                              default_aes = c("fill", "color", "size", "group", "facet","label"))
+                              default_aes = c("fill", "color", "size", "group", "facet","label"),
+                              notify_warnings="never")
   },ignoreInit = TRUE)
 
 

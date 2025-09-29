@@ -19,6 +19,7 @@ Imports:
     ggrepel,
     ggthemes,
     golem (>= 0.3.5),
+    htmltools,
     janitor,
     magrittr,
     metan,
@@ -46,4 +47,4 @@ Encoding: UTF-8
 Language: en-US
 NeedsCompilation: no
 Packaged: 2023-05-30 16:58:36 UTC; charl
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3

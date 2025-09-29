@@ -9,6 +9,7 @@
 #' @importFrom shiny NS tagList
 #' @importFrom stats density median na.omit quantile
 #' @importFrom utils write.table
+#' @import ggplot2
 #'
 
 css <- "
@@ -81,25 +82,39 @@ mod_MGIDI_ui <- function(id){
           id=ns("sidePlot"),
           #style="overflow-y: hidden; overflow-x: auto;",
           startOpen = TRUE,
-          width=35,
+          width=40,
           easyClose = FALSE,
           
           # fluidPage(
           tags$h5("Selection index table"),
           ## editable table
           rhandsontable::rHandsontableOutput(ns("tabVar")),
+          
+          
+          div(id = ns("mode_wrap"),
+              shinyWidgets::radioGroupButtons(
+                inputId = ns("mode"),
+                label = NULL,
+                choices = c("Edit", "Analyze"),
+                selected = "Edit",
+                status = "primary",
+                justified = TRUE,
+                checkIcon = list(yes = icon("ok", lib = "glyphicon"))
+              )
+          ),
           br(),
           shinyWidgets::downloadBttn(ns("DWNLD_SI"),"Download table",
                                      style = "bordered",color = "default"),
+          
           br(),
-          br(),
-          h5("Replace missing values by population average?"),
-          shinyWidgets::materialSwitch(ns("avgNA"),status="info",value=TRUE),
           sliderInput(ns("sliderSI"),
                       width="90%",
                       label = "Selection intensity",
                       min=0, max=50, value=5,step = 1,post  = " %",),
           br(),
+          h6("Replace missing values by population average?"),
+          shinyWidgets::materialSwitch(ns("avgNA"),status="info",value=TRUE),
+          
           # shinyWidgets::actionBttn(ns("actionmgidi"),"Calculate",
           #                          style = "jelly",color = "default")
           
@@ -117,19 +132,7 @@ mod_MGIDI_ui <- function(id){
               "#", ns("mode_wrap"), " .btn { color: #888 !important; }",
               "#", ns("mode_wrap"), " .btn.active { color: #222 !important; font-weight: 700 !important; }"
             )
-          ))),
-          
-          div(id = ns("mode_wrap"),
-              shinyWidgets::radioGroupButtons(
-                inputId = ns("mode"),
-                label = NULL,
-                choices = c("Edit", "Analyze"),
-                selected = "Edit",
-                status = "primary",
-                justified = TRUE,
-                checkIcon = list(yes = icon("ok", lib = "glyphicon"))
-              )
-          )
+          )))
           
           
           
@@ -153,12 +156,12 @@ mod_MGIDI_ui <- function(id){
                                           style = "bordered",color = "primary"),
                br(),
                p("Strength and weakness of the best genotypes for different factors."),
-               p("The less the contribution to the factor, the best is the performance of the genotype for the traits related to this factor (see below).")
+               p("The less the contribution to the factor (closer to the outer part of the radar plot), the better the performance of the genotype for the traits related to this factor (see below).")
         )
       ),
       
       bs4Dash::box(
-        width=8,
+        width=7,
         #height="500px",
         title="Categorization of traits and selection differential",
         closable = FALSE,
@@ -175,13 +178,15 @@ mod_MGIDI_ui <- function(id){
         h4("Definition of columns:"),
         p(strong("Xo")," indicates the population average and ",
           strong("Xs"), " the averged of the selected population."),
-        p(strong("factor "), "indicates the factor axis the most associated with this trait."),
-        p(strong("sense "), "indicates the direction sought (min / max)."),
-        p(strong("goal "), "indicates if the aim has been reached.")
+        p(strong("SD "), "selection differential = Xs-Xo."),
+        p(strong("SDperc "), "selection differential percentage"),
+        p(strong("Factor "), "indicates the factor axis the most associated with this trait."),
+        p(strong("Sense "), "indicates the direction sought (min / max)."),
+        p(strong("Goal "), "indicates if the aim has been reached.")
       ),
       bs4Dash::box(
-        width=4,
-        height="500px",
+        width=5,
+        height="700px",
         title="Ranking of genotypes",
         closable = FALSE,
         collapsed=FALSE,
@@ -189,7 +194,8 @@ mod_MGIDI_ui <- function(id){
         status="lightblue",
         solidHeader = TRUE,
         
-        reactable::reactableOutput(ns("tab_mgidi")),
+        #reactable::reactableOutput(ns("tab_mgidi")),
+        DT::dataTableOutput(ns("tab_mgidi")),
         br(),
         shinyWidgets::downloadBttn(ns("DWNLD"),"Download table",
                                    style = "bordered",color = "primary")
@@ -287,14 +293,19 @@ mod_MGIDI_server <- function(id, data_r6) {
         rhandsontable::hot_col(col = "direction", type = "dropdown",
                                source = c("min", "max", "opti", NA), strict = TRUE) %>%
         rhandsontable::hot_col(col = "opti_val", type = "numeric") %>%
-        rhandsontable::hot_col(col = "weight", type = "numeric",format="0.0[0]", step=0.1) %>%
+        rhandsontable::hot_col(col = "weight", type = "numeric",format = "0.0[00]",
+                               step = 0.01 ) %>%
         rhandsontable::hot_validate_numeric(col = "weight", min=0) %>%
         rhandsontable::hot_cols(halign = "htCenter", valign = "htMiddle",
-                                colWidths = c(145, 70, 70, 70),
+                                colWidths = c(140, 70, 70, 80),
                                 manualColumnResize = TRUE,        # enable user resizing
                                 renderer = "function (instance, td, row, col, prop, value, cellProperties) {
                               Handsontable.renderers.NumericRenderer.apply(this, arguments);
                               td.style.color = 'black';
+                              if (cellProperties.readOnly) {
+                                td.style.background = '#d3d3d3';  // light grey
+                                td.style.color = '#555';          // darker text
+                              }
                             }")
       # Wrap table in a scrollable div
       htmltools::div(style = "overflow-x: auto; width: 100%;", hot)
@@ -378,7 +389,8 @@ mod_MGIDI_server <- function(id, data_r6) {
         # Store plot in a reactive
         sw_plot <- reactive({
           req(res_mgidi_val())
-          metan:::plot.mgidi(res_mgidi_val()$res_mgidi, type = "contribution", radar = req(input$type)) +
+          metan:::plot.mgidi(res_mgidi_val()$res_mgidi, type = "contribution", genotypes="selected",
+                             radar = req(input$type)) +
             ggplot2::theme(text=ggplot2::element_text(size=17),
                            axis.text.x=element_text(angle=ifelse(req(input$type),0,90)))
         })
@@ -420,27 +432,76 @@ mod_MGIDI_server <- function(id, data_r6) {
           }
         )
         ## Table of MGIDI scores
-        output$tab_mgidi <- reactable::renderReactable({
+        # output$tab_mgidi <- reactable::renderReactable({
+        #   req(res_mgidi_val())
+        #   dat2plot <- merge(res_mgidi_val()$res_mgidi$MGIDI,
+        #                     res_mgidi_val()$res_mgidi$scores_gen,
+        #                     by.x="genotype", by.y="GEN")
+        #   dat2plot <- dat2plot[order(dat2plot$MGIDI),]
+        #   reactable::reactable(dat2plot,#res_mgidi_val()$res_mgidi$MGIDI,
+        #                        rownames=FALSE,
+        #                        sortable=TRUE,
+        #                        filterable=TRUE,
+        #                        resizable=TRUE,
+        #                        pagination=FALSE,
+        #                        striped = TRUE,
+        #                        highlight=TRUE,
+        #                        defaultColDef=reactable::colDef(align="center",
+        #                                                        filterable = TRUE,
+        #                                                        format=reactable::colFormat(digits=2,
+        #                                                                                    locales="en-US")),
+        #                        height=400,fullWidth = TRUE,compact=TRUE)
+        # })
+        # 
+        ##TODO output DT table with green-red gradient for MGIDI colors
+        
+        output$tab_mgidi <- DT::renderDT({
           req(res_mgidi_val())
-          reactable::reactable(res_mgidi_val()$res_mgidi$MGIDI, 
-                               rownames=FALSE,
-                               sortable=TRUE,
-                               filterable=TRUE,
-                               resizable=TRUE,
-                               pagination=FALSE,
-                               striped = TRUE,
-                               highlight=TRUE,
-                               defaultColDef=reactable::colDef(align="center",
-                                                               filterable = TRUE,
-                                                               format=reactable::colFormat(digits=2,
-                                                                                           locales="en-US")),
-                               height=400,fullWidth = TRUE,compact=TRUE)
+          dat2plot <- merge(res_mgidi_val()$res_mgidi$MGIDI,
+                            res_mgidi_val()$res_mgidi$contri_fac,
+                            by.x="genotype", by.y="GEN")
+          dat2plot <- dat2plot[order(dat2plot$MGIDI),]
+
+          dt.mgidi <- DT::datatable(
+            dat2plot,
+            rownames = FALSE,
+            extensions =list("ColReorder" = NULL,"Buttons" = NULL),
+            filter=list(position="top"),#, clear=F,selection = "multiple"),
+            options = list(
+              scrollX = TRUE,scrollY=300,
+              autoWidth = TRUE,
+              #pageLength = 8,
+              paging = FALSE,
+              colReorder = TRUE,
+              dom = 'Bt',
+              #dom = '<<t>Bp>',
+              #buttons = c('copy', 'excel','csv', 'pdf', 'print'),
+              class = 'compact stripe hover row-border order-column',
+              columnDefs = list(list(className = 'dt-center', targets = "_all"))
+            )
+          )
+          # # Round numeric columns to 2 decimals
+          cols.dat <- colnames(dat2plot)[2:ncol(dat2plot)]
+          dt.mgidi <- DT::formatRound(dt.mgidi, columns=cols.dat, digits = 2)
+          for (c in cols.dat) {
+            x <- dat2plot[[c]]
+            brks <- quantile(x, probs = seq(0.05, 0.95, 0.01), na.rm = TRUE)
+            cols <- paletteer::paletteer_c(
+              "ggthemes::Temperature Diverging",
+              n = length(brks) + 1,direction =  1)
+            dt.mgidi <- DT::formatStyle(dt.mgidi, c, backgroundColor = DT::styleInterval(brks, cols))
+          }
+          return(dt.mgidi)
         })
+
+        
         ## Save MGIDI score table
         output$DWNLD <- downloadHandler(
           filename = paste0("MGIDI_scores_",format(Sys.time(),"%Y-%m-%d_%H%M"),".tsv"),
           content = function(fname){
-            write.table(req(res_mgidi_val()$res_mgidi$MGIDI),sep="\t",
+            write.table(merge(res_mgidi_val()$res_mgidi$MGIDI,
+                              res_mgidi_val()$res_mgidi$scores_gen,
+                              by.x="genotype", by.y="GEN"),sep="\t",
                         fname, row.names=FALSE, fileEncoding="UTF-8")
           }
         )
@@ -477,7 +538,7 @@ mod_MGIDI_server <- function(id, data_r6) {
           dat <- req(res_mgidi_val()$data_mean)%>%dplyr::select(-genotype)
           #print(str(dat))
           plot(x=metan::corr_coef(data=dat, use="pairwise.complete.obs"),
-               size.text.cor = 4, size.text.lab=12)
+               size.text.cor = 6, size.text.lab=13,size.text.signif=5)
         })
         
         output$downloadPlotCorr <- downloadHandler(
@@ -489,7 +550,8 @@ mod_MGIDI_server <- function(id, data_r6) {
           }
         )
         
-        # # Example of distribution plot
+        
+        #### --- Distribution plot --- #####
         # output$DistribInd <- renderPlot({
         #   ggplot(res$data_mean, aes(x = .data[[req(input$variablesPlot)]])) +
         #     geom_density()
@@ -553,11 +615,9 @@ mod_MGIDI_server <- function(id, data_r6) {
               theme_bw() +
               theme(text=element_text(size=16),
                     axis.text.x = element_text(size=rel(1.5)))
-            
           }) # end isolate
           ## render distribution plot
           output$DistribInd <- renderPlot({req(RVplots$Dist)})
-          
           output$downloadPlotDist <- downloadHandler(
             filename = function(){
               paste(req(input$variablesPlot),"_DistribIndexPlot_",
@@ -567,6 +627,8 @@ mod_MGIDI_server <- function(id, data_r6) {
             }
           )
           
+          
+          #### --- Table of ranked phenotypes --- ##### 
           
           # Select genotypes to pin on top for the final table
           output$reference_selector2 <- renderUI({
@@ -596,18 +658,20 @@ mod_MGIDI_server <- function(id, data_r6) {
             
             # Traits used in selection
             rhot <- req(rhandsontable::hot_to_r(input$tabVar))
+            rhot <- rhot[!is.na(rhot$trait),]
             selected_traits <- rhot$trait[!is.na(rhot$trait)]
             direction <- rhot$direction[!is.na(rhot$direction)]
-            weights <- rhot$weight[!is.na(rhot$weight)]
+            # weights <- rhot$weight[!is.na(rhot$weight)]
             # if(length(weights) < selected_traits) {
             #   weights <- rep(1, length(selected_traits))
             # }
+            if(all(is.na(rhot$weight))) rhot$weight <- 1
+            weights <- rhot$weight
             names(direction) <- na.omit(rhot$trait)
             
             # Merge MGIDI score into trait table
             df <- merge(scores, data, by = "genotype", all.x = TRUE)
             df <- df[order(df$MGIDI), ]
-            
             ## Add extra genotypes 
             if (!is.null(input$ref_genotypes2) && length(input$ref_genotypes2) > 0) {
               #print(input$ref_genotypes2)
@@ -631,14 +695,12 @@ mod_MGIDI_server <- function(id, data_r6) {
             ## order columns based on being in the selection index and by highest weight
             selected_traits <- selected_traits[order(weights, decreasing = T)]
             df_print <- dplyr::relocate(df_print,all_of(c("genotype","MGIDI",selected_traits)))
-            
-            # Build datatable
+            ### Build datatable
             numeric_cols <- names(df_print)[sapply(df_print, is.numeric)]
             dt <- DT::datatable(
               df_print,
               rownames = FALSE,
-              extensions =list("ColReorder" = NULL,
-                               "Buttons" = NULL),
+              extensions =list("ColReorder" = NULL,"Buttons" = NULL),
               #"Scroller"=NULL),
               filter=list(position="top"),#, clear=F,selection = "multiple"),
               options = list(
@@ -662,29 +724,21 @@ mod_MGIDI_server <- function(id, data_r6) {
             for (trait in c("MGIDI",selected_traits)) {
               x <- df_print[[trait]]
               brks <- quantile(x, probs = seq(0.05, 0.95, 0.01), na.rm = TRUE)
-              cols <- paletteer::paletteer_c(
-                "ggthemes::Temperature Diverging",
-                n = length(brks) + 1,
-                direction = ifelse(direction[[trait]] == "max", -1, 1)
+              cols <- paletteer::paletteer_c("ggthemes::Temperature Diverging",
+                                             n = length(brks) + 1,
+                                             direction = ifelse(direction[[trait]] == "max", -1, 1)
               )
               dt <- DT::formatStyle(dt, trait, backgroundColor = DT::styleInterval(brks, cols))
             }
             
-            ## Color the genotype names of reference genotypes in honeydew color
+            ## Color the genotype names of reference genotypes in grey color
             if (!is.null(input$ref_genotypes2) && length(input$ref_genotypes2) > 0) {
               req(input$ref_genotypes2)
               dt <- DT::formatStyle(dt, "genotype",
                                     backgroundColor = DT::styleEqual(input$ref_genotypes2, "grey"))
             }
-            
             return(dt)
-            
-            
-            
           }, server=FALSE) # renderDT
-          
-          
-          
           
         }) ## observeEvent variablesPlot
         

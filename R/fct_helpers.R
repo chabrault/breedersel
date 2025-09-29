@@ -38,13 +38,13 @@ calc_mgidi <- function(data, var_more=NULL, var_less=NULL,
   ## STEP 1: reformat data
   ## set at long format, select columns
   dt_long <- data %>% dplyr::select(all_of(c("genotype",vmore, vless))) %>%
-    tidyr::pivot_longer(cols=c(vmore, vless),
+    tidyr::pivot_longer(cols=all_of(c(vmore, vless)),
                         names_to="name",values_to="value") 
   
   ## group and average trait values by genotype
   dt_mean_long <- dt_long %>%
     dplyr::group_by(genotype,name) %>%
-    dplyr::summarise(Mean=mean(value, na.rm=TRUE))
+    dplyr::summarise(Mean=mean(value, na.rm=TRUE),.groups="drop")
   #print(head(dt_mean_long))
   
   ## re-set at wide format
@@ -128,12 +128,14 @@ calc_mgidi <- function(data, var_more=NULL, var_less=NULL,
   seldiff$SD <- abs(seldiff$Xs - seldiff$Xo)
   seldiff$SDperc <- round(seldiff$SD / abs(seldiff$Xo) * 100, 2)
   seldiff <- cbind(seldiff, res_mgidi$sel_dif[match(traits,res_mgidi$sel_dif$VAR),c("Factor","sense","goal")])
+  seldiff <- dplyr::relocate(seldiff, Factor,.after=trait)
+  colnames(seldiff)[match(c("trait","goal","sense"),colnames(seldiff))] <- c("Trait","Goal","Sense")
   res_mgidi$sel_dif <- seldiff
+  
   # res_mgidi$sel_dif[,c("Xo","Xs","SD", "SDperc","goal")] <-
   #   apply(res_mgidi$sel_dif[,c("Xo","Xs","SD", "SDperc","goal")], 2, round, 3)
   
-  return(list(res_mgidi=res_mgidi,
-              data_mean=dt_mean_wide)
+  return(list(res_mgidi=res_mgidi,data_mean=dt_mean_wide)
   )
   
 }
