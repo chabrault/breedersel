@@ -97,6 +97,7 @@ mod_MGIDI_ui <- function(id){
                 label = NULL,
                 choices = c("Edit", "Analyze"),
                 selected = "Edit",
+                width="90%",
                 status = "primary",
                 justified = TRUE,
                 checkIcon = list(yes = icon("ok", lib = "glyphicon"))
@@ -107,10 +108,10 @@ mod_MGIDI_ui <- function(id){
                                      style = "bordered",color = "default"),
           
           br(),
-          sliderInput(ns("sliderSI"),
-                      width="90%",
-                      label = "Selection intensity",
-                      min=0, max=50, value=5,step = 1,post  = " %",),
+          shiny::sliderInput(ns("sliderSI"),
+                             width="90%",
+                             label = "Selection intensity",
+                             min=0, max=50, value=5,step = 1,post  = " %",),
           br(),
           h6("Replace missing values by population average?"),
           shinyWidgets::materialSwitch(ns("avgNA"),status="info",value=TRUE),
@@ -193,7 +194,7 @@ mod_MGIDI_ui <- function(id){
         maximizable = TRUE,
         status="lightblue",
         solidHeader = TRUE,
-        
+        p("Genotype names ordered by increasing MGIDI value (best to worst), with their score for the factor analysis."),
         #reactable::reactableOutput(ns("tab_mgidi")),
         DT::dataTableOutput(ns("tab_mgidi")),
         br(),
@@ -223,6 +224,8 @@ mod_MGIDI_ui <- function(id){
         maximizable = TRUE,
         solidHeader = TRUE,
         status="navy",
+        p("Distribution of the population value for one trait. Selected genotypes with the lowest MGIDI are named."),
+        p("The background color of the label represents the MGIDI score across all selection index traits."),
         sidebar=bs4Dash::bs4CardSidebar(
           id=ns("sidePlot"),
           background = "#333a40",
@@ -247,6 +250,26 @@ mod_MGIDI_ui <- function(id){
         solidHeader = TRUE,
         shiny::uiOutput(ns("reference_selector2")),
         DT::dataTableOutput(ns("ranked_traits_table"))
+      ),
+      ## adding a table that shows the complementary between the genotypes
+      bs4Dash::box(
+        width = 12,
+        title = "Table of genotype complementarity",
+        status = "olive",
+        solidHeader = TRUE,
+        p("Best complement genotypes among the selected portion of the population and mean of the MGIDI and trait values."),
+        fluidRow(
+          column(6,
+                 shiny::uiOutput(ns("reference_selector3"))
+          ),
+          column(6,
+                 shiny::sliderInput(ns("sliderSIComp"),
+                                    width="300px",
+                                    label = "Selection intensity",
+                                    min=0, max=50, value=10,step = 1,post  = " %",)
+          ),
+          DT::dataTableOutput(ns("table_complement"))
+        )
       )
     )
   )
@@ -360,7 +383,7 @@ mod_MGIDI_server <- function(id, data_r6) {
           return()
         }
         
-        # --- Run MGIDI ---
+        # --- Run MGIDI ------
         res <- tryCatch({
           calc_mgidi(
             data = data_r6$final(),
@@ -432,48 +455,25 @@ mod_MGIDI_server <- function(id, data_r6) {
           }
         )
         ## Table of MGIDI scores
-        # output$tab_mgidi <- reactable::renderReactable({
-        #   req(res_mgidi_val())
-        #   dat2plot <- merge(res_mgidi_val()$res_mgidi$MGIDI,
-        #                     res_mgidi_val()$res_mgidi$scores_gen,
-        #                     by.x="genotype", by.y="GEN")
-        #   dat2plot <- dat2plot[order(dat2plot$MGIDI),]
-        #   reactable::reactable(dat2plot,#res_mgidi_val()$res_mgidi$MGIDI,
-        #                        rownames=FALSE,
-        #                        sortable=TRUE,
-        #                        filterable=TRUE,
-        #                        resizable=TRUE,
-        #                        pagination=FALSE,
-        #                        striped = TRUE,
-        #                        highlight=TRUE,
-        #                        defaultColDef=reactable::colDef(align="center",
-        #                                                        filterable = TRUE,
-        #                                                        format=reactable::colFormat(digits=2,
-        #                                                                                    locales="en-US")),
-        #                        height=400,fullWidth = TRUE,compact=TRUE)
-        # })
-        # 
-        ##TODO output DT table with green-red gradient for MGIDI colors
-        
         output$tab_mgidi <- DT::renderDT({
           req(res_mgidi_val())
           dat2plot <- merge(res_mgidi_val()$res_mgidi$MGIDI,
                             res_mgidi_val()$res_mgidi$contri_fac,
                             by.x="genotype", by.y="GEN")
           dat2plot <- dat2plot[order(dat2plot$MGIDI),]
-
+          
           dt.mgidi <- DT::datatable(
             dat2plot,
             rownames = FALSE,
             extensions =list("ColReorder" = NULL,"Buttons" = NULL),
             filter=list(position="top"),#, clear=F,selection = "multiple"),
             options = list(
-              scrollX = TRUE,scrollY=300,
+              scrollX = TRUE,scrollY=400,
               autoWidth = TRUE,
               #pageLength = 8,
               paging = FALSE,
               colReorder = TRUE,
-              dom = 'Bt',
+              dom = 't',
               #dom = '<<t>Bp>',
               #buttons = c('copy', 'excel','csv', 'pdf', 'print'),
               class = 'compact stripe hover row-border order-column',
@@ -493,7 +493,7 @@ mod_MGIDI_server <- function(id, data_r6) {
           }
           return(dt.mgidi)
         })
-
+        
         
         ## Save MGIDI score table
         output$DWNLD <- downloadHandler(
@@ -600,18 +600,20 @@ mod_MGIDI_server <- function(id, data_r6) {
               geom_vline(xintercept=meanx, color="grey60", linewidth=1.5, linetype="dashed") +
               geom_vline(xintercept=medx, color='#FFFFFF',linewidth=1.5, linetype="dashed") +
               ggtitle(req(input$variablesPlot)) +
-              geom_rug(alpha=0.8) +
+              geom_rug(alpha=0.8) + ## TODO: color geom rug for selected geno
               ggrepel::geom_label_repel(data=dat.sel,
                                         mapping = aes(x=.data[[input$variablesPlot]],y=0,
-                                                      label=genotype,
-                                                      fill=MGIDI),
+                                                      label=genotype,fill=MGIDI),
                                         direction="y",point.padding = 0.01,
                                         force_pull = 0.1,size=6,
                                         vjust=0.6, max.overlaps = Inf,
                                         color="black",
                                         #fontface="bold",
                                         alpha=0.7) +
+              geom_rug(data=dat.sel, mapping = aes(x=.data[[input$variablesPlot]],color=MGIDI),
+                       length = unit(0.05, "npc"), linewidth=0.5)+
               scale_fill_viridis_c(begin=0.35, direction=1,option="H")+
+              scale_color_viridis_c(begin=0.35, direction=1,option="H")+
               theme_bw() +
               theme(text=element_text(size=16),
                     axis.text.x = element_text(size=rel(1.5)))
@@ -637,11 +639,11 @@ mod_MGIDI_server <- function(id, data_r6) {
               ns("ref_genotypes2"),
               "Supplementary genotype(s)",
               choices = c(unique(res_mgidi_val()$data_mean$genotype)),
-              multiple=TRUE,
+              multiple=TRUE, width="auto",
               options=shinyWidgets::pickerOptions(liveSearch=T,
-                                                  maxOptions=20,
+                                                  maxOptions=10,
                                                   actionsBox=TRUE,
-                                                  virtualScroll = 200),
+                                                  virtualScroll = 50),
               selected = NULL
             )
           })
@@ -661,13 +663,14 @@ mod_MGIDI_server <- function(id, data_r6) {
             rhot <- rhot[!is.na(rhot$trait),]
             selected_traits <- rhot$trait[!is.na(rhot$trait)]
             direction <- rhot$direction[!is.na(rhot$direction)]
+            names(direction) <- na.omit(rhot$trait)
             # weights <- rhot$weight[!is.na(rhot$weight)]
             # if(length(weights) < selected_traits) {
             #   weights <- rep(1, length(selected_traits))
             # }
             if(all(is.na(rhot$weight))) rhot$weight <- 1
             weights <- rhot$weight
-            names(direction) <- na.omit(rhot$trait)
+            
             
             # Merge MGIDI score into trait table
             df <- merge(scores, data, by = "genotype", all.x = TRUE)
@@ -740,7 +743,120 @@ mod_MGIDI_server <- function(id, data_r6) {
             return(dt)
           }, server=FALSE) # renderDT
           
+          
         }) ## observeEvent variablesPlot
+        
+        ### --- Complementary genotypes ---- ####
+        
+        ## 1. Select genotype to complement
+        output$reference_selector3 <- renderUI({
+          req(res_mgidi_val())
+          ## genotype ordered by increasing MGIDI
+          gen.ord.MGIDI <- res_mgidi_val()$res_mgidi$MGIDI$genotype[order(res_mgidi_val()$res_mgidi$MGIDI$MGIDI)]
+          shinyWidgets::pickerInput(
+            ns("ref_genotypes3"),
+            "Genotype to complement",
+            choices = c(unique(gen.ord.MGIDI)),
+            multiple=FALSE,width="auto",
+            options=shinyWidgets::pickerOptions(liveSearch=T,
+                                                actionsBox=TRUE,
+                                                virtualScroll = 10),
+            selected = ""
+          )
+        })
+        
+        
+        output$table_complement <- DT::renderDT({
+          req(res_mgidi_val(), input$ref_genotypes3,input$sliderSIComp, input$tabVar)  
+          ## 2. Intensity of selection and list of complements
+          # observeEvent(c(input$sliderSIComp, input$ref_genotypes3),{
+          gen.comp.sel <- gen.ord.MGIDI[1:(req(input$sliderSIComp)*length(gen.ord.MGIDI)/100)]
+          
+          ## 3. Output table of crosses with complementary score and mean value by trait
+          compl_sel_gen <-
+            res_mgidi_val()$res_mgidi$contri_fac |>
+            subset(GEN %in% unique(c(input$ref_genotypes3,gen.comp.sel))) |>
+            metan::column_to_rownames("GEN")
+          compl_mat <- dist(compl_sel_gen) |> as.matrix()
+          
+          
+          #if(input$ref_genotypes3 %in% rownames(compl_mat)){
+          if (!is.null(req(input$ref_genotypes3)) && length(req(input$ref_genotypes3)) > 0 &&
+              req(input$ref_genotypes3) %in% rownames(compl_mat)) {
+            req(input$ref_genotypes3)
+            # print(input$ref_genotypes3)
+            # print(gen.comp.sel)
+            ## extract the complementarity
+            compl_sel_par <- as.data.frame(compl_mat[req(input$ref_genotypes3),,drop=FALSE])
+            compl_sel_par <- tidyr::pivot_longer(compl_sel_par, cols=everything(),
+                                                 names_to="Parent2", 
+                                                 values_to = "Complement")
+            ## build a matrix with for each pair of parents, 
+            ## the complementarity value and the mean phenotype for the selected traits
+            compl_sel_par <- cbind(data.frame(Parent1=req(input$ref_genotypes3)), compl_sel_par)
+            compl_sel_par <- compl_sel_par[order(compl_sel_par$Complement, decreasing=T),]
+            ##compute mean phenotype for selected_traits
+            
+            # Traits used in selection
+            rhot <- req(rhandsontable::hot_to_r(input$tabVar))
+            rhot <- rhot[!is.na(rhot$trait),]
+            selected_traits <- rhot$trait[!is.na(rhot$trait)]
+            if(all(is.na(rhot$weight))) rhot$weight <- 1
+            ## order columns based on being in the selection index and by highest weight
+            selected_traits <- selected_traits[order(rhot$weight, decreasing = T)]
+            direction <- rhot$direction[!is.na(rhot$direction)]
+            names(direction) <- na.omit(rhot$trait)
+            
+            compl_sel_par_mean <- data.frame()
+            
+            for(i in 1:nrow(compl_sel_par)){
+              mean_traits <- res_mgidi_val()$data_mean |> 
+                dplyr::left_join(res_mgidi_val()$res_mgidi$MGIDI, by="genotype") |> 
+                filter(genotype %in% compl_sel_par[i,c("Parent1","Parent2")]) |> 
+                dplyr::summarize(across(all_of(c("MGIDI",selected_traits)), mean)) 
+              compl_sel_par_mean <- rbind(compl_sel_par_mean, cbind(compl_sel_par[i,],mean_traits))
+            }
+            
+            dt.out <- DT::datatable(compl_sel_par_mean,
+                                    rownames = FALSE,
+                                    extensions =list("ColReorder" = NULL,"Buttons" = NULL),
+                                    #"Scroller"=NULL),
+                                    filter=list(position="top"),
+                                    options = list(
+                                      scrollX = TRUE,#scrollY=400,
+                                      autoWidth = TRUE,
+                                      pageLength = 10,
+                                      colReorder = TRUE,
+                                      dom = '<<t>Bp>',
+                                      buttons = c('copy', 'excel','csv', 'pdf', 'print'),
+                                      class = 'compact stripe hover row-border order-column',
+                                      columnDefs = list(list(className = 'dt-center', targets = "_all"))
+                                    )
+            )
+            
+            ## Round numeric columns to 2 decimals
+            numeric_cols <- names(compl_sel_par_mean)[sapply(compl_sel_par_mean, is.numeric)]
+            dt.out <- DT::formatRound(dt.out, columns = numeric_cols, digits = 2)
+            
+            ## add color gradient to the traits
+            # Apply red-green color per trait
+            direction[["MGIDI"]] <- "min" ; direction[["Complement"]] <- "max"
+            for (trait in c("Complement","MGIDI",selected_traits)) {
+              x <- compl_sel_par_mean[[trait]]
+              brks <- quantile(x, probs = seq(0.05, 0.95, 0.01), na.rm = TRUE)
+              cols <- paletteer::paletteer_c("ggthemes::Temperature Diverging",
+                                             n = length(brks) + 1,
+                                             direction = ifelse(direction[[trait]] == "max", -1, 1)
+              )
+              dt.out <- DT::formatStyle(dt.out, trait, backgroundColor = DT::styleInterval(brks, cols))
+            }
+            return(dt.out)
+            
+          } else {
+            print(compl_mat) # debug
+          }
+
+        }, server=FALSE) ## end renderDT tablle complement
         
       }## end of if Analyze
     }, ignoreInit = TRUE) ## observeEvent mode

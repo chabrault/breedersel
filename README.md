@@ -29,8 +29,9 @@ devtools::install_github("chabrault/breedersel")
 
 You need a file with a column identifying the genotype and several
 numerical traits in other columns. File format includes “csv”, “tsv”,
-“xlsx” (with tab selection). It is preferable to have genotype-adjusted
-values instead of have multiple replicated values for each genotype.
+“xlsx”, “xls” (with tab selection), “rds”, “txt”,…. It is preferable to
+have genotype-adjusted values instead of have multiple replicated values
+for each genotype.
 
 ## Launch the ShinyApp
 
@@ -52,8 +53,8 @@ breedersel::run_app()
 3.  Filter the list of genotype by the value of the columns (optional)
     Select the columns to filter on. Move the slider or select the
     categories for character columns. You can track the number of rows
-    left in your dataset and add back check genotypes. Once you’re done
-    with the filtering, validate the table.
+    left in your dataset and add check genotypes. Once you’re done with
+    the filtering, validate the table.
 
 4.  Apply a multi-trait selection index (MGIDI) Fill the selection index
     table:
