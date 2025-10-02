@@ -104,14 +104,14 @@ mod_MGIDI_ui <- function(id){
               )
           ),
           br(),
-          shinyWidgets::downloadBttn(ns("DWNLD_SI"),"Download table",
-                                     style = "bordered",color = "default"),
           
-          br(),
           shiny::sliderInput(ns("sliderSI"),
                              width="90%",
                              label = "Selection intensity",
                              min=0, max=50, value=5,step = 1,post  = " %",),
+          br(),
+          shinyWidgets::downloadBttn(ns("DWNLD_SI"),"Download table",
+                                     style = "bordered",color = "default"),
           br(),
           h6("Replace missing values by population average?"),
           shinyWidgets::materialSwitch(ns("avgNA"),status="info",value=TRUE),
@@ -157,7 +157,8 @@ mod_MGIDI_ui <- function(id){
                                           style = "bordered",color = "primary"),
                br(),
                p("Strength and weakness of the best genotypes for different factors."),
-               p("The less the contribution to the factor (closer to the outer part of the radar plot), the better the performance of the genotype for the traits related to this factor (see below).")
+               p("The less the contribution to the factor (closer to the outer part of the radar plot), 
+                 the better the performance of the genotype for the traits related to this factor (see below).")
         )
       ),
       
@@ -525,8 +526,9 @@ mod_MGIDI_server <- function(id, data_r6) {
             multiple=TRUE,
             options=shinyWidgets::pickerOptions(liveSearch=T,
                                                 maxOptions=20,
+                                                size=10,
                                                 actionsBox=TRUE,
-                                                virtualScroll = 200),
+                                                virtualScroll = 10),
             selected = NULL
           )
         })
@@ -642,8 +644,9 @@ mod_MGIDI_server <- function(id, data_r6) {
               multiple=TRUE, width="auto",
               options=shinyWidgets::pickerOptions(liveSearch=T,
                                                   maxOptions=10,
-                                                  actionsBox=TRUE,
-                                                  virtualScroll = 50),
+                                                  size = 10,# number of items visible before scrolling           
+                                                  virtualScroll = 10,
+                                                  actionsBox=TRUE),
               selected = NULL
             )
           })
@@ -713,7 +716,13 @@ mod_MGIDI_server <- function(id, data_r6) {
                 pageLength = 10,
                 colReorder = TRUE,
                 dom = '<<t>Bp>',
-                buttons = c('copy', 'excel','csv', 'pdf', 'print'),
+                buttons=list(
+                  list(extend="copy"),
+                  list(extend="csv",title=NULL,filename=paste0("genotype_score_pheno_",format(Sys.time(),"%Y-%m-%d_%H%M"))),
+                  list(extend="excel",title=NULL,filename=paste0("genotype_score_pheno_",format(Sys.time(),"%Y-%m-%d_%H%M"))),
+                  list(extend="pdf",title=NULL,filename=paste0("genotype_score_pheno_",format(Sys.time(),"%Y-%m-%d_%H%M"))),
+                  list(extend="print",title=NULL,filename=paste0("genotype_score_pheno_",format(Sys.time(),"%Y-%m-%d_%H%M")))
+                ),
                 class = 'compact stripe hover row-border order-column',
                 columnDefs = list(list(className = 'dt-center', targets = "_all"))
               )
@@ -778,7 +787,9 @@ mod_MGIDI_server <- function(id, data_r6) {
             width = "auto",
             options = shinyWidgets::pickerOptions(
               liveSearch = TRUE,
-              actionsBox = TRUE
+              actionsBox = TRUE,
+              size = 10,# number of items visible before scrolling           
+              virtualScroll = 10 
             ),
             selected = NULL  # <- don't use NA
           )
@@ -788,7 +799,7 @@ mod_MGIDI_server <- function(id, data_r6) {
           req(res_mgidi_val(), input$ref_genotypes3,input$sliderSIComp, input$tabVar)  
           
           ## 2. Intensity of selection and list of complements
-
+          
           mgidi_df <- res_mgidi_val()$res_mgidi$MGIDI
           gen.ord.MGIDI <- as.character(mgidi_df$genotype[order(mgidi_df$MGIDI)])
           gen.comp.sel <- gen.ord.MGIDI[1:(req(input$sliderSIComp)*length(gen.ord.MGIDI)/100)]
@@ -848,7 +859,13 @@ mod_MGIDI_server <- function(id, data_r6) {
                                       pageLength = 10,
                                       colReorder = TRUE,
                                       dom = '<<t>Bp>',
-                                      buttons = c('copy', 'excel','csv', 'pdf', 'print'),
+                                      buttons=list(
+                                        list(extend="copy"),
+                                        list(extend="csv",title=NULL,filename=paste0("genotype-pair_complement-score_pheno_",format(Sys.time(),"%Y-%m-%d_%H%M"))),
+                                        list(extend="excel",title=NULL,filename=paste0("genotype-pair_complement-score_pheno_",format(Sys.time(),"%Y-%m-%d_%H%M"))),
+                                        list(extend="pdf",title=NULL,filename=paste0("genotype-pair_complement-score_pheno_",format(Sys.time(),"%Y-%m-%d_%H%M"))),
+                                        list(extend="print",title=NULL,filename=paste0("genotype-pair_complement-score_pheno_",format(Sys.time(),"%Y-%m-%d_%H%M")))
+                                      ),
                                       class = 'compact stripe hover row-border order-column',
                                       columnDefs = list(list(className = 'dt-center', targets = "_all"))
                                     )
