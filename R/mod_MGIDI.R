@@ -748,28 +748,49 @@ mod_MGIDI_server <- function(id, data_r6) {
         
         ### --- Complementary genotypes ---- ####
         
+        
         ## 1. Select genotype to complement
         output$reference_selector3 <- renderUI({
           req(res_mgidi_val())
-          ## genotype ordered by increasing MGIDI
-          gen.ord.MGIDI <- res_mgidi_val()$res_mgidi$MGIDI$genotype[order(res_mgidi_val()$res_mgidi$MGIDI$MGIDI)]
+          
+          # defensive extraction
+          mgidi_df <- res_mgidi_val()$res_mgidi$MGIDI
+          if (!is.data.frame(mgidi_df) || !"genotype" %in% colnames(mgidi_df) || !"MGIDI" %in% colnames(mgidi_df)) {
+            message("reference_selector3: MGIDI object not in expected format")
+            return(NULL)
+          }
+          
+          # ordered character vector of genotypes
+          gen.ord.MGIDI <- as.character(mgidi_df$genotype[order(mgidi_df$MGIDI)])
+          if (length(gen.ord.MGIDI) == 0) {
+            message("reference_selector3: no genotypes available")
+            return(NULL)
+          }
+          
+          # debug (safe)
+          # message("reference_selector3 sample: ", paste(head(gen.ord.MGIDI, 5), collapse = ", "))
+          
           shinyWidgets::pickerInput(
-            ns("ref_genotypes3"),
-            "Genotype to complement",
-            choices = c(unique(gen.ord.MGIDI)),
-            multiple=FALSE,width="auto",
-            options=shinyWidgets::pickerOptions(liveSearch=T,
-                                                actionsBox=TRUE,
-                                                virtualScroll = 10),
-            selected = ""
+            inputId = ns("ref_genotypes3"),
+            label = "Genotype to complement",
+            choices = gen.ord.MGIDI,
+            multiple = FALSE,
+            width = "auto",
+            options = shinyWidgets::pickerOptions(
+              liveSearch = TRUE,
+              actionsBox = TRUE
+            ),
+            selected = NULL  # <- don't use NA
           )
         })
         
-        
         output$table_complement <- DT::renderDT({
           req(res_mgidi_val(), input$ref_genotypes3,input$sliderSIComp, input$tabVar)  
+          
           ## 2. Intensity of selection and list of complements
-          # observeEvent(c(input$sliderSIComp, input$ref_genotypes3),{
+
+          mgidi_df <- res_mgidi_val()$res_mgidi$MGIDI
+          gen.ord.MGIDI <- as.character(mgidi_df$genotype[order(mgidi_df$MGIDI)])
           gen.comp.sel <- gen.ord.MGIDI[1:(req(input$sliderSIComp)*length(gen.ord.MGIDI)/100)]
           
           ## 3. Output table of crosses with complementary score and mean value by trait
@@ -780,7 +801,6 @@ mod_MGIDI_server <- function(id, data_r6) {
           compl_mat <- dist(compl_sel_gen) |> as.matrix()
           
           
-          #if(input$ref_genotypes3 %in% rownames(compl_mat)){
           if (!is.null(req(input$ref_genotypes3)) && length(req(input$ref_genotypes3)) > 0 &&
               req(input$ref_genotypes3) %in% rownames(compl_mat)) {
             req(input$ref_genotypes3)
@@ -813,7 +833,7 @@ mod_MGIDI_server <- function(id, data_r6) {
               mean_traits <- res_mgidi_val()$data_mean |> 
                 dplyr::left_join(res_mgidi_val()$res_mgidi$MGIDI, by="genotype") |> 
                 filter(genotype %in% compl_sel_par[i,c("Parent1","Parent2")]) |> 
-                dplyr::summarize(across(all_of(c("MGIDI",selected_traits)), mean)) 
+                dplyr::summarize(across(all_of(c("MGIDI",selected_traits)), mean, na.rm=T)) 
               compl_sel_par_mean <- rbind(compl_sel_par_mean, cbind(compl_sel_par[i,],mean_traits))
             }
             
@@ -855,7 +875,7 @@ mod_MGIDI_server <- function(id, data_r6) {
           } else {
             print(compl_mat) # debug
           }
-
+          
         }, server=FALSE) ## end renderDT tablle complement
         
       }## end of if Analyze
