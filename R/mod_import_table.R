@@ -134,6 +134,8 @@ mod_import_table_server <- function(id){
       
       # Safe to rename
       colnames(df)[colnames(df) == input$genotype_column] <- "genotype"
+      ## change genotype to character in case it's numeric entry
+      df$genotype <- as.character(df$genotype)
       dat(df)
     })
     #return(dat)

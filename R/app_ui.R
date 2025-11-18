@@ -6,6 +6,7 @@
 #' @importFrom shiny fluidPage fluidRow actionButton column tabsetPanel insertTab
 #' @importFrom bs4Dash bs4DashPage dashboardHeader bs4DashSidebar bs4SidebarHeader sidebarMenu bs4SidebarMenu bs4SidebarMenuItem bs4SidebarMenuSubItem dashboardBody tabItem bs4TabItem bs4TabItems tabItems
 #' @importFrom datamods i18n
+#' @importFrom esquisse esquisse_ui esquisse_container
 #' @noRd
 
 app_ui <- function(request) {

@@ -14,7 +14,7 @@ Imports:
     datamods,
     dplyr,
     DT,
-    esquisse,
+    esquisse (>= 2.0.0),
     ggplot2,
     ggrepel,
     ggthemes,

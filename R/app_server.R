@@ -10,33 +10,29 @@ app_server <- function(input, output, session) {
   # Your application server logic
   shiny::shinyOptions(bootstrapTheme = bslib::bs_theme(version = 4L))
   options(shiny.reactlog = TRUE, shiny.error = browser)
-  ## initialize translation
-  # i18n <- datamods::i18n$new(
-  #   translation_csv = "www/translations.csv",
-  #   language = "en"
-  # )
-  # 
-  # observeEvent(input$lang, {
-  #   i18n$set_language(input$lang)
-  # })
-  
   # create R6 object to store data
-  data_r6 <- R6::R6Class(
-    "dataInR6",
-    public = list(
-      raw=NULL,
-      updated=NULL,
-      final=NULL
-    )
+  # data_r6 <- R6::R6Class(
+  #   "dataInR6",
+  #   public = list(
+  #     raw=NULL,
+  #     updated=NULL,
+  #     final=NULL
+  #   )
+  # )
+  data_r6 <- list(
+    raw=NULL,
+    updated=NULL,
+    final=NULL
+    
   )
-
+  
   ## ---------- Import data ------------------------
   ### MODULE 1 mod_import_table ###
   ##options("datamods.i18n" = "en")
   data_r6$raw <- mod_import_table_server("import_table_1")
   #print(isolate(class(data_r6$raw)))
   data_r6$final <- reactive(data_r6$raw())
-
+  
   ### Table of data
   output$output_data <- reactable::renderReactable(
     reactable::reactable(data_r6$final(),
@@ -52,10 +48,10 @@ app_server <- function(input, output, session) {
                          defaultColDef=reactable::colDef(align = "center",  filterable = TRUE,
                                                          format=reactable::colFormat(digits=2)),
                          height=700
-
+                         
     )
   )
-
+  
   ## update data by selecting column type, names and which one to keep
   ##options("datamods.i18n" = "en")
   # observeEvent(input$valid_upVars,{
@@ -68,7 +64,7 @@ app_server <- function(input, output, session) {
   #   data_r6$updated <- reactive(tmp())
   # },ignoreInit = TRUE)
   #data_r6$final <- reactive(data_r6$updated())
-
+  
   ## apply filtering on rows for some columns
   observeEvent(input$valid_filtVars,{#req(data_r6$raw()),{#input$valid_filtVars,{
     data_r6$updated <- reactive(data_r6$raw())
@@ -77,11 +73,11 @@ app_server <- function(input, output, session) {
     #print(paste0("ncol filtered data: ",ncol(isolate(data_r6$final()))))
   }, ignoreInit=TRUE
   )
-
-
+  
+  
   ### Plot MGIDI outputs (multivariate selection index)
   mod_MGIDI_server("mgidi_1",data_r6=data_r6)
-
+  
   ### Esquisse plot
   ##datamods::set_i18n("en",packages=c("datamods","esquisse"))
   observeEvent(input$launch_esquisse,{
@@ -91,16 +87,16 @@ app_server <- function(input, output, session) {
                               default_aes = c("fill", "color", "size", "group", "facet","label"),
                               notify_warnings="never")
   },ignoreInit = TRUE)
-
-
-
+  
+  
+  
   ## About / Rsession
   output$pkgVersion <- renderText(
     as.character(utils::packageVersion("breedersel")))
-
+  
   output$Rsession <- renderPrint(
     print(utils::sessionInfo())
   )
-
-
+  
+  
 }
