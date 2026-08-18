@@ -118,7 +118,7 @@ app_ui <- function(request) {
                     ),
                     bs4TabItem(tabName="Apropos",
                                fluidPage(
-                                 h2("Grape Selector application"),
+                                 h2("Breedersel application"),
                                  column(12,
                                         h5("Author: Charlotte Brault"),
                                         a(actionButton(inputId = "email1", label = "Send email",
