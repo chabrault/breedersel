@@ -32,6 +32,7 @@ Imports:
     shiny (>= 1.7.4),
     shinyalert,
     shinyWidgets,
+    spelling,
     stats,
     tidyr,
     utils
@@ -47,4 +48,4 @@ Encoding: UTF-8
 Language: en-US
 NeedsCompilation: no
 Packaged: 2023-05-30 16:58:36 UTC; charl
-RoxygenNote: 7.3.3
+Config/roxygen2/version: 8.0.0
