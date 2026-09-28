@@ -6,7 +6,5 @@ server: connect.posit.cloud
 hostUrl: https://api.connect.posit.cloud/v1
 appId: 01a01555-a423-db94-8c40-d7a6a37e0038
 bundleId:
-url: https://connect.posit.cloud/chabrault/content/01a01555-a423-db94-8c40-d7a6a37e0038
+url:
 version: 1
-asMultiple: FALSE
-asStatic: FALSE

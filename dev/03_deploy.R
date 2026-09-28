@@ -44,13 +44,13 @@ rsconnect::writeManifest()
 
 ## In command line.
 rsconnect::deployApp(
-  appName = desc::desc_get_field("breedersel"),
+  #appName = desc::desc_get_field("breedersel"),
   appTitle = desc::desc_get_field("Breeder Selection"),
   appFiles = c(
     # Add any additional files unique to your app here.
     "R/",
     "inst/",
-    "data/",
+    #"data/",
     "NAMESPACE",
     "DESCRIPTION",
     "app.R"

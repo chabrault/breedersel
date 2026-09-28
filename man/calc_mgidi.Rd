@@ -4,31 +4,16 @@
 \alias{calc_mgidi}
 \title{helpers}
 \usage{
-calc_mgidi(
-  data,
-  var_more = NULL,
-  var_less = NULL,
-  rhot_table = NULL,
-  SI = 15,
-  mineval = 1,
-  weights = NULL,
-  avg_NA = FALSE
-)
+calc_mgidi(data, rhot_table = NULL, SI = 15, mineval = 1, avg_NA = FALSE)
 }
 \arguments{
-\item{data}{data frame, with "genotype" as column names, and variables defined in "var_more" and "var_less"}
-
-\item{var_more}{character vector that must match with column names of data. It contains variables to be maximized. One of `rhot_table` or `var_more` and `var_less` must be non NULL.}
-
-\item{var_less}{character vector that must match with column names of data. It contains variables to be minimized One of `rhot_table` or `var_more` and `var_less` must be non NULL.}
+\item{data}{data frame, with "genotype" as column names, and variables defined in `rhot_table`}
 
 \item{rhot_table}{a data frame with columns "trait", "direction", "opti_val" and "weight". Direction must be one of "min", "max" or "opti". In that case, the "opti_val" column should be filled for this line.}
 
 \item{SI}{selection intensity in percentage of number of unique genotypes in the table. Default to 15, must be between 0 and 100.}
 
 \item{mineval}{parameter of `mgidi` function for the number of factors to retain. Default to 1.}
-
-\item{weights}{weigths to apply to variables (if not provided by "rhot_table"), optional. If defined, it must be between 0 and 1 and defined for all variables.}
 
 \item{avg_NA}{logical to indicate if missing data would be replaced by population average to avoid the exclusion of genotypes in MGIDI.}
 }

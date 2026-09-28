@@ -390,7 +390,7 @@ mod_MGIDI_server <- function(id, data_r6) {
             data = data_r6$final(),
             rhot_table = df,
             SI = req(input$sliderSI),
-            avg_NA = req(input$avgNA)
+            avg_NA = req(input$avgNA) ## TODO: add weight and mineval
           )
         }, error = function(e) {
           shinyalert::shinyalert("Error", paste0("MGIDI failed: ", e$message), type = "error")
