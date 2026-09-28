@@ -17,6 +17,7 @@ Imports:
     esquisse (>= 2.0.0),
     ggplot2,
     ggrepel,
+    ggthemes,
     golem (>= 0.3.5),
     htmltools,
     janitor,

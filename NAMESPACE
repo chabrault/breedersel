@@ -3,6 +3,7 @@
 export(run_app)
 import(dplyr)
 import(ggplot2)
+import(ggthemes)
 import(shiny)
 importFrom(bs4Dash,bs4DashPage)
 importFrom(bs4Dash,bs4DashSidebar)
