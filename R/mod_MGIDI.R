@@ -278,6 +278,7 @@ mod_MGIDI_ui <- function(id){
 
 #' MGIDI Server Functions
 #' @import ggplot2 
+#' @import ggthemes
 #'
 #' @noRd
 mod_MGIDI_server <- function(id, data_r6) {

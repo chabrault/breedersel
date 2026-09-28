@@ -113,7 +113,7 @@ calc_mgidi <- function(data,
   ## STEP 4 calculate selection differential
   seldiff <- data.frame(trait=traits,
                         Xo=round(colMeans(dt_mean_wide[,traits], na.rm=TRUE),2),
-                        Xs=round(colMeans(dt_mean_wide[dt_mean_wide$genotype %in% res_mgidi$sel_gen,traits], na.rm=TRUE)),2)
+                        Xs=round(colMeans(dt_mean_wide[dt_mean_wide$genotype %in% res_mgidi$sel_gen,traits], na.rm=TRUE),2))
   seldiff$SD <- abs(seldiff$Xs - seldiff$Xo)
   seldiff$SDperc <- round(seldiff$SD / abs(seldiff$Xo) * 100, 2)
   seldiff <- cbind(seldiff, res_mgidi$sel_dif[match(traits,res_mgidi$sel_dif$VAR),c("Factor","sense","goal")])

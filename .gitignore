@@ -8,3 +8,6 @@ inst/doc
 .Rhistory
 .RData
 .Rhistory
+.httr-oauth
+.DS_Store
+.quarto
