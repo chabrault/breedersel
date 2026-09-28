@@ -17,7 +17,6 @@ Imports:
     esquisse (>= 2.0.0),
     ggplot2,
     ggrepel,
-    ggthemes,
     golem (>= 0.3.5),
     htmltools,
     janitor,
@@ -25,14 +24,12 @@ Imports:
     metan,
     paletteer,
     plyr,
-    R6,
     reactable,
     readxl,
     rhandsontable,
     shiny (>= 1.7.4),
     shinyalert,
     shinyWidgets,
-    spelling,
     stats,
     tidyr,
     utils
@@ -43,9 +40,9 @@ Suggests:
     testthat (>= 3.0.0)
 VignetteBuilder: 
     knitr
+Config/roxygen2/version: 8.0.0
 Config/testthat/edition: 3
 Encoding: UTF-8
 Language: en-US
 NeedsCompilation: no
 Packaged: 2023-05-30 16:58:36 UTC; charl
-Config/roxygen2/version: 8.0.0

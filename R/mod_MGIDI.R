@@ -806,10 +806,10 @@ mod_MGIDI_server <- function(id, data_r6) {
           
           ## 3. Output table of crosses with complementary score and mean value by trait
           compl_sel_gen <-
-            res_mgidi_val()$res_mgidi$contri_fac |>
-            subset(GEN %in% unique(c(input$ref_genotypes3,gen.comp.sel))) |>
+            res_mgidi_val()$res_mgidi$contri_fac %>%
+            subset(GEN %in% unique(c(input$ref_genotypes3,gen.comp.sel))) %>%
             metan::column_to_rownames("GEN")
-          compl_mat <- dist(compl_sel_gen) |> as.matrix()
+          compl_mat <- dist(compl_sel_gen) %>% as.matrix()
           
           
           if (!is.null(req(input$ref_genotypes3)) && length(req(input$ref_genotypes3)) > 0 &&
@@ -841,9 +841,9 @@ mod_MGIDI_server <- function(id, data_r6) {
             compl_sel_par_mean <- data.frame()
             
             for(i in 1:nrow(compl_sel_par)){
-              mean_traits <- res_mgidi_val()$data_mean |> 
-                dplyr::left_join(res_mgidi_val()$res_mgidi$MGIDI, by="genotype") |> 
-                filter(genotype %in% compl_sel_par[i,c("Parent1","Parent2")]) |> 
+              mean_traits <- res_mgidi_val()$data_mean %>% 
+                dplyr::left_join(res_mgidi_val()$res_mgidi$MGIDI, by="genotype") %>% 
+                filter(genotype %in% compl_sel_par[i,c("Parent1","Parent2")]) %>% 
                 dplyr::summarize(across(all_of(c("MGIDI",selected_traits)), mean, na.rm=T)) 
               compl_sel_par_mean <- rbind(compl_sel_par_mean, cbind(compl_sel_par[i,],mean_traits))
             }
