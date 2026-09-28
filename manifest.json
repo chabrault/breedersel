@@ -585,6 +585,28 @@
         "Built": "R 4.6.1; ; 2026-06-25 00:56:19 UTC; windows"
       }
     },
+    "breedersel": {
+      "Source": "github",
+      "Repository": null,
+      "description": {
+        "Package": "breedersel",
+        "Title": "Breeder Selection",
+        "Version": "0.0.0.9000",
+        "Authors@R": "\n    person(\"Charlotte\", \"Brault\", , \"charlotte.brault@live.com\", role = c(\"aut\", \"cre\"))",
+        "Author": "Charlotte Brault [cre, aut]",
+        "Description": "PKG_DESC.",
+        "License": "GPL (>= 3)",
+        "Imports": "bs4Dash,\nbslib,\nconfig (>= 0.3.1),\ndata.table,\ndatamods,\ndplyr,\nDT,\nesquisse (>= 2.0.0),\nggplot2,\nggrepel,\ngolem (>= 0.3.5),\nhtmltools,\njanitor,\nmagrittr,\nmetan,\npaletteer,\nplyr,\nreactable,\nreadxl,\nrhandsontable,\nshiny (>= 1.7.4),\nshinyalert,\nshinyWidgets,\nstats,\ntidyr,\nutils",
+        "Suggests": "knitr,\nrmarkdown,\nspelling,\ntestthat (>= 3.0.0)",
+        "VignetteBuilder": "knitr",
+        "Config/roxygen2/version": "8.0.0",
+        "Config/testthat/edition": "3",
+        "Encoding": "UTF-8",
+        "Language": "en-US",
+        "NeedsCompilation": "no",
+        "Packaged": "2023-05-30 16:58:36 UTC; charl"
+      }
+    },
     "brio": {
       "Source": "CRAN",
       "Repository": "https://cran.rstudio.com",
@@ -5008,7 +5030,7 @@
       "checksum": "58e64a89368121b138e166deec6b4e3a"
     },
     "DESCRIPTION": {
-      "checksum": "ff00c80216997f46411c322dc3dbe8e7"
+      "checksum": "63f594a7778dbf3f845fe217ccb21d3a"
     },
     "doc/breesersel.html": {
       "checksum": "1424be27aa7f5de219c17c5a8df147d1"
@@ -5131,7 +5153,7 @@
       "checksum": "edc91354b67e53e28c258ce07ab1fc13"
     },
     "Meta/vignette.rds": {
-      "checksum": "56be5cb7cc359152ac296ee4327d94cf"
+      "checksum": "b473f5627f84cbaf5d35d4fb35dbcbe9"
     },
     "NAMESPACE": {
       "checksum": "280cab9ed652b3123077125764765044"
@@ -5164,7 +5186,7 @@
       "checksum": "aa1fb942a5bf844de7dfda1211d39ebc"
     },
     "R/mod_MGIDI.R": {
-      "checksum": "7f70f62840244f8c871f345ecb2c0642"
+      "checksum": "113f5d938123c5faa1e93dc691e57257"
     },
     "R/run_app.R": {
       "checksum": "f9849eacd79fa0b1bbe405d6c0a90f9f"

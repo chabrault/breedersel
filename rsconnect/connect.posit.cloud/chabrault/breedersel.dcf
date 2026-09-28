@@ -8,6 +8,3 @@ appId: 01a01555-a423-db94-8c40-d7a6a37e0038
 bundleId:
 url: https://connect.posit.cloud/chabrault/content/01a01555-a423-db94-8c40-d7a6a37e0038
 version: 1
-asMultiple: FALSE
-asStatic: FALSE
-ignoredFiles: translations/translation_en.csv|translations/translation_fr.csv|translations/translations.json
